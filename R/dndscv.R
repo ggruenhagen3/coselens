@@ -67,7 +67,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     # [Input] Reference database
     if (refdb == "hg19") {
-        data("refcds_hg19", package="dndscv")
+        data("dndscv_data/refcds_hg19", package="coselenss")
         if (any(gene_list=="CDKN2A")) { # Replace CDKN2A in the input gene list with two isoforms
             gene_list = unique(c(setdiff(gene_list,"CDKN2A"),"CDKN2A.p14arf","CDKN2A.p16INK4a"))
         }
@@ -88,21 +88,21 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     # [Input] Covariates (The user can input a custom set of covariates as a matrix)
     if (is.character(cv)) {
-        data(list=sprintf("covariates_%s",cv), package="dndscv")
+        data(list=sprintf("dndscv_data/covariates_%s",cv), package="coselenss")
     } else {
         covs = cv
     }
 
     # [Input] Known cancer genes (The user can input a gene list as a character vector)
     if (kc[1] %in% c("cgc81")) {
-        data(list=sprintf("cancergenes_%s",kc), package="dndscv")
+        data(list=sprintf("dndscv_data/cancergenes_%s",kc), package="coselenss")
     } else {
         known_cancergenes = kc
     }
 
     # [Input] Substitution model (The user can also input a custom substitution model as a matrix)
     if (length(sm)==1) {
-        data(list=sprintf("submod_%s",sm), package="dndscv")
+        data(list=sprintf("dndscv_data/submod_%s",sm), package="coselenss")
     } else {
         substmodel = sm
     }
