@@ -1,17 +1,25 @@
 #' COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)
 #' 
-#' Given an input of mutations from two groups of patients, calculate dN/dS in each of the groups, 
-#' and find the excess of non-synonymous substitutions between them. For example, one group can be
-#' mutations from individuals in a certain cancer type with mutations in a specific gene vs 
-#' those without mutations in the specific gene. A p-value is returned.
+#' Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups, 
+#' and the excess of non-synonymous substitutions between them is found as an estimate for the difference 
+#' in the number of driver mutations. For example, one group can be mutations from individuals in a certain
+#' cancer type with mutations in a specific gene vs those without mutations in the specific gene.
+#' A p value is returned for positive conditional selection in each gene in the human reference genome (hg19).
 #' 
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
 #' 
 #' @return coselenss returns a dataframe with rows representing and the following columns
-#' @return - column1: column 1 description
-#' @return - column2: column 2 description
+#' @return - gene_name: name of gene that conditional selection was calculated in
+#' @return - num.drivers.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+#' @return - num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+#' @return - pmis: p-value for conditional selection in missense mutations
+#' @return - ptrunc: p-value for conditional selection in truncating mutations
+#' @return - pall: p-value for conditional selection in all ABC
+#' @return - pind: p-value for conditional selection in small indels
+#' @return - pglobal: p-value for conditional selection in XYZ
+#' @return - qglobal: q-value for conditional selection in XYZ using Benjamini-Hochberg correction
 #' 
 #' @export
 
@@ -27,7 +35,6 @@ coselenss = function(group1, group2, subset.genes.by = NULL) {
     group2_ex <- calc_ex(group2_dndsout)
     group1_ex$ex_tot <- group1_ex[,2] + group1_ex[,3]
     group2_ex$ex_tot <- group2_ex[,2] + group2_ex[,3]
-    print(head(group1_ex))
     ex_values <- merge(x=group1_ex[,c("gene_name","ex_mis","ex_non","ex_tot")], y=group2_ex[,c("gene_name", "ex_mis", "ex_non", "ex_tot")], by ="gene_name", suffixes=c(".group1", ".group2"))
     
     # Put the data in the same order
@@ -61,11 +68,15 @@ coselenss = function(group1, group2, subset.genes.by = NULL) {
     lldf$pglobal <- 1 - pchisq(-2 * (log(lldf$pall) + log(lldf$pind)), df = 4)
     lldf <- lldf[order(lldf$pglobal),] # order data by p-values
     
-    # Reorder the cancer_type and split_gene to the front
-    lldf <- lldf[,c(ncol(lldf), ncol(lldf)-1, 1:(ncol(lldf)-2))]
+    # Adjust p-values
+    lldf$qglobal = p.adjust(lldf$pglobal, method = "BH")
     
     # Add mutation excess data
     lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2")], by = "gene_name")
+    
+    # Subset the columns returned and reorder them
+    lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qglobal")]
+    colnames(lldf)[2:3] = c("num.drivers.group1", "num.drivers.group2")
     
     # Return the output
     print("Done.")
