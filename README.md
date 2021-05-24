@@ -57,3 +57,17 @@ Use ```head(coselenss_res)```, the output should look like this:
 |A2ML1      |0.0448769648 |0.031765610|0.5995085|0.6697172|0.7954594|0.1085713|0.2978855|1|
 |A3GALT2    |-0.0007904211|-0.003739818|0.8294326|1.0000000|0.9770623|1.0000000|0.9997349|1|
 |A4GALT     |0.0197142366 |0.002747199|0.4765606|1.0000000|0.7761870|0.1472146|0.3621349|1|
+
+Let's genes with significant by doing the following
+
+```
+coselenss_res[which(coselenss_res$qglobal < 0.05),]
+```
+
+The output should look like this:
+| gene_name | num.drivers.group1 | num.drivers.group2 | pmis | ptrunc | pall | pind| pglobal | qglobal |
+|-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|
+|BMPR2      |0.2976423|0.004456581|5.019896e-04|4.728058e-09|8.374397e-11|0.0007870415|2.066347e-12|2.050953e-08|
+|BRAF       |0.9742985|-0.005574817|7.599226e-29|7.343197e-03|2.942258e-29|0.3863245615|0.000000e+00|0.000000e+00|
+
+We detected two genes, but BRAF was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove BRAF because it is the trivial solution, but we have just discovered that there may be conditional selection between BRAF and BMPR2 in COAD. Feel free to think outside the box and make discories of your own using our tool!
