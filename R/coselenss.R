@@ -27,6 +27,7 @@ coselenss = function(group1, group2, subset.genes.by = NULL) {
     group2_ex <- calc_ex(group2_dndsout)
     group1_ex$ex_tot <- group1_ex[,2] + group1_ex[,3]
     group2_ex$ex_tot <- group2_ex[,2] + group2_ex[,3]
+    print(head(group1_ex))
     ex_values <- merge(x=group1_ex[,c("gene_name","ex_mis","ex_non","ex_tot")], y=group2_ex[,c("gene_name", "ex_mis", "ex_non", "ex_tot")], by ="gene_name", suffixes=c(".group1", ".group2"))
     
     # Put the data in the same order
@@ -64,7 +65,7 @@ coselenss = function(group1, group2, subset.genes.by = NULL) {
     lldf <- lldf[,c(ncol(lldf), ncol(lldf)-1, 1:(ncol(lldf)-2))]
     
     # Add mutation excess data
-    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.with","ex_tot.without")], by = "gene_name")
+    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2")], by = "gene_name")
     
     # Return the output
     print("Done.")
