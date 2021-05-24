@@ -4,7 +4,7 @@
 \alias{coselenss}
 \title{COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)}
 \usage{
-coselenss(group1, group2, subset.genes.by)
+coselenss(group1, group2, subset.genes.by = NULL)
 }
 \arguments{
 \item{group1}{group of individuals (for example those that contain a mutation in a split_gene)}
