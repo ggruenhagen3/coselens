@@ -5,11 +5,10 @@
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
+#' 
+#' @export
 
 coselenss = function(group1, group2, subset.genes.by) {
-  # Load Packages
-  suppressMessages(library("hash"))
-  
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
