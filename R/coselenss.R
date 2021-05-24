@@ -1,10 +1,17 @@
-#' Calculate dN/dS in each of the groups (patients in the cancer_type group1 mutations in the split_gene and those group2).
-#' Perform a log-likelihood ratio test on the log likelihoods obtained from running the groups individually and then together.
-#' Save the p-value and data for later use.
+#' COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)
+#' 
+#' Given an input of mutations from two groups of patients, calculate dN/dS in each of the groups, 
+#' and find the excess of non-synonymous substitutions between them. For example, one group can be
+#' mutations from individuals in a certain cancer type with mutations in a specific gene vs 
+#' those without mutations in the specific gene. A p-value is returned.
 #' 
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
+#' 
+#' @return coselenss returns a dataframe with rows representing and the following columns
+#' @return - column1: column 1 description
+#' @return - column2: column 2 description
 #' 
 #' @export
 
