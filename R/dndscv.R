@@ -49,7 +49,6 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     # Restricting input matrix to first 5 columns *EDIT*
     if (compare == FALSE) {
-        print("NOT comparing")
         set.seed(5)
         mutations = mutations[,1:5] # Restricting input matrix to first 5 columns
     }
@@ -732,25 +731,25 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             sel_cv = cbind(genemuts[,1:5],sel_cv)
             sel_cv = sel_cv[order(sel_cv$p, -sel_cv$wmis_cv),] # Sorting genes in the output file
         } else {
-            print("NOT using my_selfunc_cv")
-            cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
-            if (wg == TRUE) {
-                cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
-                print("Calculating Sums")
-                sum_n_mis   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),3])
-                sum_n_non   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),4]) + sum(genemuts[which(genemuts$gene_name %in% cancer_genes),5])
-                print("ok")
-                print("Calculating mrfolds")
-                all_mrfolds <<- as.vector(t(sapply(1:nrow(genemuts[which(genemuts$gene_name %in% cancer_genes),]), calculate_mrfold)))
-                prods_mis   <<- genemuts[which(genemuts$gene_name %in% cancer_genes),7] * all_mrfolds
-                prods_non   <<- (genemuts[which(genemuts$gene_name %in% cancer_genes),8] + genemuts[which(genemuts$gene_name %in% cancer_genes),9]) * all_mrfolds
-                sum_exp_mis <<- sum(prods_mis)
-                sum_exp_non <<- sum(prods_non)
-                print("ok")
-            }
+            # print("NOT using my_selfunc_cv")
+            # cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
+            # if (wg == TRUE) {
+            #     cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
+            #     print("Calculating Sums")
+            #     sum_n_mis   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),3])
+            #     sum_n_non   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),4]) + sum(genemuts[which(genemuts$gene_name %in% cancer_genes),5])
+            #     print("ok")
+            #     print("Calculating mrfolds")
+            #     all_mrfolds <<- as.vector(t(sapply(1:nrow(genemuts[which(genemuts$gene_name %in% cancer_genes),]), calculate_mrfold)))
+            #     prods_mis   <<- genemuts[which(genemuts$gene_name %in% cancer_genes),7] * all_mrfolds
+            #     prods_non   <<- (genemuts[which(genemuts$gene_name %in% cancer_genes),8] + genemuts[which(genemuts$gene_name %in% cancer_genes),9]) * all_mrfolds
+            #     sum_exp_mis <<- sum(prods_mis)
+            #     sum_exp_non <<- sum(prods_non)
+            #     print("ok")
+            # }
 
             if (ex == TRUE) {
-                print("ex == TRUE")
+                print("Using excess method")
                 num_patients <- length(as.vector(unique(annot$sampleID)))
             }
 
