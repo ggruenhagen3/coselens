@@ -102,45 +102,6 @@ lik_func = function(dnds1, dnds2) {
     wind_B   = ifelse(n_ind_B > 0, wind_B, 0)
     wind_T_A = ifelse(n_ind_A > 0, wind_T_A, 0)
     wind_T_B = ifelse(n_ind_B > 0, wind_T_B, 0)
-    # wnon_A[is.na(wnon_A)] <- 0
-    # wnon_B[is.na(wnon_B)] <- 0
-    
-    if (j == 2182) {
-      print(j)
-      cat(paste("RefCDS1", dnds1$RefCDS[[j]]$gene_name), "\n")
-      cat(paste("genemuts1", dnds1$genemuts[j,1]), "\n")
-      cat(paste("RefCDS2", dnds2$RefCDS[[j]]$gene_name), "\n")
-      cat(paste("genemuts2", dnds2$genemuts[j,1]), "\n")
-      cat(paste("1$sel_cv$gene_name", dnds1$sel_cv$gene_name[j], "\n"))
-      cat(paste("2$sel_cv$gene_name", dnds2$sel_cv$gene_name[j], "\n"))
-      print(wmis_T_A)
-      print(wmis_T_B)
-      print(wnon_T_A)
-      print(wnon_T_B)
-      print(wmis_A)
-      print(wmis_B)
-      print(wnon_A)
-      print(wnon_B)
-      # print("llallA lambda")
-      # print(xA_L*dnds1$mutrates*mrfold_A*t(array(c(1,wmis_T_A,wnon_T_A,wnon_T_A),dim=c(4,numrates))))
-      # print("llallA x")
-      # print(xA_N)
-      # print("llallA dpois")
-      # print(dpois(x=xA_N, lambda=xA_L*dnds1$mutrates*mrfold_A*t(array(c(1,wmis_T_A,wnon_T_A,wnon_T_A),dim=c(4,numrates))), log=T))
-      if (wmis_T_A == 0 && wmis_T_B == 0 && wnon_T_A == 0 && wnon_T_B== 0) {
-        print("All 0")
-      }
-    }
-    
-    # if (dnds1$RefCDS[[j]]$gene_name == "TP53") {
-    #   print(j)
-    #   cat(paste("RefCDS1", dnds1$RefCDS[[j]]$gene_name), "\n")
-    #   cat(paste("genemuts1", dnds1$genemuts[j,1]), "\n")
-    #   cat(paste("RefCDS2", dnds2$RefCDS[[j]]$gene_name), "\n")
-    #   cat(paste("genemuts2", dnds2$genemuts[j,1]), "\n")
-    #   cat(paste("1$sel_cv$gene_name", dnds1$sel_cv$gene_name[j], "\n"))
-    #   cat(paste("2$sel_cv$gene_name", dnds2$sel_cv$gene_name[j], "\n"))
-    # }
     
     theta_indels_A <- dnds1$nbregind$theta
     theta_indels_B <- dnds2$nbregind$theta
@@ -175,9 +136,8 @@ lik_func = function(dnds1, dnds2) {
   num_patients_A <- length(as.vector(unique(dnds1$annotmuts$sampleID)))
   num_patients_B <- length(as.vector(unique(dnds2$annotmuts$sampleID)))
 
-  print("Using like_func_ex.R")  
   h0_sel_cv = as.data.frame(t(sapply(1:nrow(dnds1$genemuts), my_selfun_cv)))
-  print("Finished my_selfun_cv")
+  print("Finished log likelihood ratios")
   h0_sel_cv = cbind(dnds1$genemuts[,1],h0_sel_cv)
   colnames(h0_sel_cv) = c("gene_name", "llmis_A", "llmis_B", "lltrunc_A", "lltrunc_B", "llmis_check_A", "lltrunc_check_B", "llmis", "lltrunc", "llall", "llallA", "llallB", "llind0", "llind1")
   

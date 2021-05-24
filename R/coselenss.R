@@ -15,7 +15,7 @@
 #' 
 #' @export
 
-coselenss = function(group1, group2, subset.genes.by) {
+coselenss = function(group1, group2, subset.genes.by = NULL) {
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
