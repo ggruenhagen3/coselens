@@ -17,16 +17,45 @@ coselenss(group1, group2, subset.genes.by = NULL)
 coselenss returns a dataframe with rows representing and the following columns
 
 \itemize{
-\item column1: column 1 description
+\item gene_name: name of gene that conditional selection was calculated in
 }
 
 \itemize{
-\item column2: column 2 description
+\item num.drivers.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+}
+
+\itemize{
+\item num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+}
+
+\itemize{
+\item pmis: p-value for conditional selection in missense mutations
+}
+
+\itemize{
+\item ptrunc: p-value for conditional selection in truncating mutations
+}
+
+\itemize{
+\item pall: p-value for conditional selection in all ABC
+}
+
+\itemize{
+\item pind: p-value for conditional selection in small indels
+}
+
+\itemize{
+\item pglobal: p-value for conditional selection in XYZ
+}
+
+\itemize{
+\item qglobal: q-value for conditional selection in XYZ using Benjamini-Hochberg correction
 }
 }
 \description{
-Given an input of mutations from two groups of patients, calculate dN/dS in each of the groups,
-and find the excess of non-synonymous substitutions between them. For example, one group can be
-mutations from individuals in a certain cancer type with mutations in a specific gene vs
-those without mutations in the specific gene. A p-value is returned.
+Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups,
+and the excess of non-synonymous substitutions between them is found as an estimate for the difference
+in the number of driver mutations. For example, one group can be mutations from individuals in a certain
+cancer type with mutations in a specific gene vs those without mutations in the specific gene.
+A p value is returned for positive conditional selection in each gene in the human reference genome (hg19).
 }
