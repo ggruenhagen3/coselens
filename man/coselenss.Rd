@@ -2,9 +2,7 @@
 % Please edit documentation in R/coselenss.R
 \name{coselenss}
 \alias{coselenss}
-\title{Calculate dN/dS in each of the groups (patients in the cancer_type group1 mutations in the split_gene and those group2).
-Perform a log-likelihood ratio test on the log likelihoods obtained from running the groups individually and then together.
-Save the p-value and data for later use.}
+\title{COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)}
 \usage{
 coselenss(group1, group2, subset.genes.by)
 }
@@ -15,8 +13,20 @@ coselenss(group1, group2, subset.genes.by)
 
 \item{subset.genes.by}{genes to subset results by}
 }
+\value{
+coselenss returns a dataframe with rows representing and the following columns
+
+\itemize{
+\item column1: column 1 description
+}
+
+\itemize{
+\item column2: column 2 description
+}
+}
 \description{
-Calculate dN/dS in each of the groups (patients in the cancer_type group1 mutations in the split_gene and those group2).
-Perform a log-likelihood ratio test on the log likelihoods obtained from running the groups individually and then together.
-Save the p-value and data for later use.
+Given an input of mutations from two groups of patients, calculate dN/dS in each of the groups,
+and find the excess of non-synonymous substitutions between them. For example, one group can be
+mutations from individuals in a certain cancer type with mutations in a specific gene vs
+those without mutations in the specific gene. A p-value is returned.
 }
