@@ -27,10 +27,12 @@ A dataframe is returned with p-values for conditional selection in each gene in 
 * num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
 * pmis: p-value for conditional selection in missense mutations
 * ptrunc: p-value for conditional selection in truncating mutations
-* pall: p-value for conditional selection in all ABC
+* pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
 * pind: p-value for conditional selection in small indels
-* pglobal: p-value for conditional selection in XYZ
-* qglobal: q-value for conditional selection in XYZ using Benjamini-Hochberg correction
+* pglobal: Fisher's combined p-value for pall and pind
+* qglobal: q-value of pglobal using Benjamini-Hochberg correction
+
+Note that pglobal/qglobal may be too conservative if the sensitivity for the pall or pind test is low due to low sample sizes.
 
 # Example
 Coselenss was created in order to discover epistatic interactions between cancers genes in specific cancer types. In other words, we detected conditional selection in cancer genes when mutations in another cancer gene were present/absent. As an example, let's take patients with  COAD (colon cancer) and split them into two groups, those with mutations in BRAF and those without mutations in BRAF.
