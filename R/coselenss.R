@@ -28,8 +28,8 @@ coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
-    group1_dndsout <- dndscv(group1, refdb = refdb, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
-    group2_dndsout <- dndscv(group2, refdb = refdb, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
+    group1_dndsout <- dndscv(group1, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
+    group2_dndsout <- dndscv(group2, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
     
     # Calculate nonsynonymous mutation excess
     group1_ex <- calc_ex(group1_dndsout)
