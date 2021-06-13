@@ -10,7 +10,12 @@ devtools::install_github("ggruenhagen3/coselenss")
 ```
 
 # Input
-A dataframe of mutations for two groups of individuals is required. Each dataframe of mutations should have 5 columns: sampleID, chr, pos, ref, alt. Only list independent events as mutations. An example of the format of the table:
+* group1: group of individuals (for example those that contain a mutation in a split_gene)
+* group2: another group of individuals that do NOT contain a mutation in a split_gene
+* subset.genes.by: genes to subset results by
+* refdb: Reference database (path to .rda file)
+
+The input parameters group1 and groups are a dataframe of mutations for the two groups of individuals is required. Each dataframe of mutations should have 5 columns: sampleID, chr, pos, ref, alt. Only list independent events as mutations. An example of the format of the table:
 
 |sampleID | chr | pos | ref | alt|
 |---------|-----|-----|-----|----|
@@ -35,15 +40,15 @@ A dataframe is returned with p-values for conditional selection in each gene in 
 Note that pglobal/qglobal may be too conservative if the sensitivity for the pall or pind test is low due to low sample sizes.
 
 # Example
-Coselenss was created in order to discover epistatic interactions between cancers genes in specific cancer types. In other words, we detected conditional selection in cancer genes when mutations in another cancer gene were present/absent. As an example, let's take patients with  COAD (colon cancer) and split them into two groups, those with mutations in BRAF and those without mutations in BRAF.
+Coselenss was created in order to discover epistatic interactions between cancers genes in specific cancer types. In other words, we detected conditional selection in cancer genes when mutations in another cancer gene were present/absent. As an example, let's take patients with  COAD (colon cancer) and split them into two groups, those with mutations in BRAF and those without mutations in APC.
 
 ```
 library("coselenss")
-group1 = data(group1, package="coselenss")  # mutations from patients with    mutations in BRAF
-group2 = data(group2, package="coselenss")  # mutations from patients without mutations in BRAF
+group1 = coselenss::group1  # mutations from patients with    mutations in APC
+group2 = coselenss::group2  # mutations from patients without mutations in APC
 ```
 
-Next, let's detect conditional selection in genes with BRAF in COAD (runtime ~5.5 minutes on a laptop).
+Next, let's detect conditional selection in genes with APC in COAD (runtime ~5.5 minutes on a laptop).
 
 ```
 coselenss_res = coselenss(group1, group2)
