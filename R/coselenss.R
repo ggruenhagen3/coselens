@@ -27,6 +27,7 @@
 coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
   # Find dN/dS and CIs
   tryCatch({
+    print(head(group1))
     # Calculate dN/dS and the confidence intervals
     group1_dndsout <- dndscv(group1, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
     group2_dndsout <- dndscv(group2, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
@@ -42,6 +43,7 @@ coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
     group1_sel_cv = group1_dndsout$sel_cv[order(as.numeric(rownames(group1_dndsout$sel_cv))),,drop=FALSE]
     group2_sel_cv = group2_dndsout$sel_cv[order(as.numeric(rownames(group2_dndsout$sel_cv))),,drop=FALSE]
     
+    print(head(group1_sel_cv))
     # If necessary correct for the difference in mutational loads between groups by normalizing dN/dS by
     # a global dN/dS in all cancer genes. 
     h0_sel_cv <<- lik_func(group1_dndsout, group2_dndsout)
