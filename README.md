@@ -77,4 +77,4 @@ The output should look like this:
 |APC        |0.98535779|-0.04327314|4.599838e-02|1.669909e-08|1.661006e-08|0.2386762|8.065981e-08|0.001610938|
 |BRAF       |0.03621197|0.22591651|2.276400e-08|1.821872e-01|6.747822e-08|0.4244034|5.260378e-07|0.005253014|
 
-We detected two genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution, but we have just discovered that there may be conditional selection between BRAF and BMPR2 in COAD. Feel free to think outside the box and make discories of your own using our tool!
+We detected two genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution, but we have just discovered that there may be conditional selection between APC and BRAF in COAD. Feel free to think outside the box and make discories of your own using our tool!
