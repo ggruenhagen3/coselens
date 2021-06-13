@@ -2,9 +2,9 @@
 % Please edit documentation in R/coselenss.R
 \name{coselenss}
 \alias{coselenss}
-\title{COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)}
+\title{COnditional SELection on the Excess of NonSynonymous Substitutions (coselenss)}
 \usage{
-coselenss(group1, group2, subset.genes.by = NULL)
+coselenss(group1, group2, subset.genes.by = NULL, refdb = "hg19")
 }
 \arguments{
 \item{group1}{group of individuals (for example those that contain a mutation in a split_gene)}
@@ -12,6 +12,8 @@ coselenss(group1, group2, subset.genes.by = NULL)
 \item{group2}{another group of individuals that do NOT contain a mutation in a split_gene}
 
 \item{subset.genes.by}{genes to subset results by}
+
+\item{refdb}{Reference database (path to .rda file)}
 }
 \value{
 coselenss returns a dataframe with rows representing and the following columns
@@ -37,7 +39,7 @@ coselenss returns a dataframe with rows representing and the following columns
 }
 
 \itemize{
-\item pall: p-value for conditional selection in all ABC
+\item pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
 }
 
 \itemize{
@@ -45,11 +47,11 @@ coselenss returns a dataframe with rows representing and the following columns
 }
 
 \itemize{
-\item pglobal: p-value for conditional selection in XYZ
+\item pglobal: Fisher's combined p-value for pall and pind
 }
 
 \itemize{
-\item qglobal: q-value for conditional selection in XYZ using Benjamini-Hochberg correction
+\item qglobal: q-value of pglobal using Benjamini-Hochberg correction
 }
 }
 \description{

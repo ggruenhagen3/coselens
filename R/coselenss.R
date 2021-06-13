@@ -1,4 +1,4 @@
-#' COnditional SELection on the Excess of NonSynonymous Substitutions (COSELENSS)
+#' COnditional SELection on the Excess of NonSynonymous Substitutions (coselenss)
 #' 
 #' Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups, 
 #' and the excess of non-synonymous substitutions between them is found as an estimate for the difference 
@@ -9,6 +9,7 @@
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
+#' @param refdb Reference database (path to .rda file)
 #' 
 #' @return coselenss returns a dataframe with rows representing and the following columns
 #' @return - gene_name: name of gene that conditional selection was calculated in
@@ -16,19 +17,19 @@
 #' @return - num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
 #' @return - pmis: p-value for conditional selection in missense mutations
 #' @return - ptrunc: p-value for conditional selection in truncating mutations
-#' @return - pall: p-value for conditional selection in all ABC
+#' @return - pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
 #' @return - pind: p-value for conditional selection in small indels
-#' @return - pglobal: p-value for conditional selection in XYZ
-#' @return - qglobal: q-value for conditional selection in XYZ using Benjamini-Hochberg correction
+#' @return - pglobal: Fisher's combined p-value for pall and pind
+#' @return - qglobal: q-value of pglobal using Benjamini-Hochberg correction
 #' 
 #' @export
 
-coselenss = function(group1, group2, subset.genes.by = NULL) {
+coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
-    group1_dndsout <- dndscv(group1, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
-    group2_dndsout <- dndscv(group2, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
+    group1_dndsout <- dndscv(group1, refdb = refdb, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
+    group2_dndsout <- dndscv(group2, refdb = refdb, max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
     
     # Calculate nonsynonymous mutation excess
     group1_ex <- calc_ex(group1_dndsout)
