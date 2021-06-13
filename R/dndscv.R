@@ -454,7 +454,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             }
 
             covs$gene_name <- rownames(covs) # IMPORTANT
-            print(head(covs))
+            
             # cat(paste("length of covs: ", nrow(covs), "\n", sep=""))
             # cat(paste("length of genemuts[,c(n_syn,exp_syn)]: ", nrow(genemuts[,c("n_syn","exp_syn")]), "\n", sep=""))
             # print(head(covs[2182,]))
@@ -466,10 +466,11 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             row.names(nbrdf) <- nbrdf$gene_name # make the row names the gene names instead of 1 through 20091
             nbrdf = nbrdf[order(genemuts$gene_name),] # Put it in the original order as genemuts
             nbrdf = nbrdf[,2:ncol(nbrdf)] # Remove gene_name
-            # print(head(nbrdf))
+            print(head(nbrdf))
 
             # Negative binomial regression for substitutions
             if (nrow(genemuts)<500) { # If there are <500 genes, we run the regression without covariates
+                print("Fewer than 500 genemuts")
                 model = MASS::glm.nb(n_syn ~ offset(log(exp_syn)) - 1 , data = nbrdf)
             } else {
                 model = tryCatch({
