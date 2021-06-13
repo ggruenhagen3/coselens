@@ -40,7 +40,7 @@ A dataframe is returned with p-values for conditional selection in each gene in 
 Note that pglobal/qglobal may be too conservative if the sensitivity for the pall or pind test is low due to low sample sizes.
 
 # Example
-Coselenss was created in order to discover epistatic interactions between cancers genes in specific cancer types. In other words, we detected conditional selection in cancer genes when mutations in another cancer gene were present/absent. As an example, let's take patients with  COAD (colon cancer) and split them into two groups, those with mutations in BRAF and those without mutations in APC.
+Coselenss was created in order to discover epistatic interactions between cancers genes in specific cancer types. In other words, we detected conditional selection in cancer genes when mutations in another cancer gene were present/absent. As an example, let's take patients with  COAD (colon cancer) and split them into two groups, those with mutations in APC and those without mutations in APC.
 
 ```
 library("coselenss")
