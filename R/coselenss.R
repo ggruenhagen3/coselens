@@ -76,8 +76,8 @@ coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
     lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2")], by = "gene_name")
     
     # Subset the columns returned and reorder them
-    # lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qglobal")]
-    # colnames(lldf)[2:3] = c("num.drivers.group1", "num.drivers.group2")
+    lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qglobal")]
+    colnames(lldf)[2:3] = c("num.drivers.group1", "num.drivers.group2")
     
     # Return the output
     print("Done.")
