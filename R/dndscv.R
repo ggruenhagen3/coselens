@@ -41,7 +41,7 @@
 #' @return - wrongmuts: Table of input mutations with a wrong annotation of the reference base (if any).
 
 dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = 3, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1, outmats = F, compare = F, outmutrates = F, wg = F, ex = F, split_gene = "") {
-  if (cv == "h19")  { print("using cv = hg19") }  
+  if (cv == "hg19")  { print("using cv = hg19") }  
   message("Using latest version of dndscv Aug 23-2")
     ## 1. Environment
     message("[1] Loading the environment...")
@@ -454,7 +454,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             }
 
             covs$gene_name <- rownames(covs) # IMPORTANT
-
+            print(head(covs))
             # cat(paste("length of covs: ", nrow(covs), "\n", sep=""))
             # cat(paste("length of genemuts[,c(n_syn,exp_syn)]: ", nrow(genemuts[,c("n_syn","exp_syn")]), "\n", sep=""))
             # print(head(covs[2182,]))
