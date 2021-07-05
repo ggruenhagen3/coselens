@@ -1,15 +1,16 @@
 #' COnditional SELection on the Excess of NonSynonymous Substitutions (coselenss)
 #' 
+#' coselenss identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes.
 #' Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups, 
 #' and the excess of non-synonymous substitutions between them is found as an estimate for the difference 
 #' in the number of driver mutations. For example, one group can be mutations from individuals in a certain
 #' cancer type with mutations in a specific gene vs those without mutations in the specific gene.
-#' A p value is returned for positive conditional selection in each gene in the human reference genome (hg19).
+#' A p value is returned for differential selection in each gene in the reference genome (default: hg19).
 #' 
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
-#' @param refdb Reference database (path to .rda file)
+#' @param ... other paramters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity
 #' 
 #' @return coselenss returns a dataframe with rows representing and the following columns
 #' @return - gene_name: name of gene that conditional selection was calculated in
@@ -24,12 +25,12 @@
 #' 
 #' @export
 
-coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19") {
+coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1) {
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
-    group1_dndsout <- dndscv(group1, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
-    group2_dndsout <- dndscv(group2, gene_list = NULL, refdb = refdb, sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, outmats=T, outmutrates = T, wg = F, ex = T)
+    group1_dndsout <- coselenss::dndscv(group1, gene_list = NULL, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
+    group2_dndsout <- coselenss::dndscv(group2, gene_list = NULL, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
     
     # Calculate nonsynonymous mutation excess
     group1_ex <- calc_ex(group1_dndsout)
