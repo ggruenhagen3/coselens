@@ -21,6 +21,7 @@
 #' @return - pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
 #' @return - pind: p-value for conditional selection in small indels
 #' @return - pglobal: Fisher's combined p-value for pall and pind
+#' @return - qall: q-value of pall using Benjamini-Hochberg correction
 #' @return - qglobal: q-value of pglobal using Benjamini-Hochberg correction
 #' 
 #' @export
@@ -71,13 +72,14 @@ coselenss = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm 
     lldf <- lldf[order(lldf$pglobal),] # order data by p-values
     
     # Adjust p-values
+    lldf$qall = p.adjust(lldf$pall, method = "BH")
     lldf$qglobal = p.adjust(lldf$pglobal, method = "BH")
     
     # Add mutation excess data
     lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2")], by = "gene_name")
     
     # Subset the columns returned and reorder them
-    lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qglobal")]
+    lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qall", "qglobal")]
     colnames(lldf)[2:3] = c("num.drivers.group1", "num.drivers.group2")
     
     # Return the output

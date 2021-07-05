@@ -67,6 +67,10 @@ coselenss returns a dataframe with rows representing and the following columns
 }
 
 \itemize{
+\item qall: q-value of pall using Benjamini-Hochberg correction
+}
+
+\itemize{
 \item qglobal: q-value of pglobal using Benjamini-Hochberg correction
 }
 }
