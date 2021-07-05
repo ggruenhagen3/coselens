@@ -15,7 +15,7 @@ devtools::install_github("ggruenhagen3/coselenss")
 * group1: mutation file for the first group of samples (for example, those that possess the trait of interest)
 * group2: mutation file for the second group of samples (for example, those that do NOT possess the trait of interest)
 * subset.genes.by (optional): genes to subset results by
-* refdb (optional): reference database of coding sequences as an .rda file, the default is GRCh37/hg19
+* ... other paramters passed to dncdscv, all defaults from ```dndscv``` are used except max_muts_per_gene_per_sample is set to Infinity
 
 The input parameters group1 and group2 are two dataframes of mutations, one for each group of samples. Each dataframe of mutations should have 5 columns: sampleID, chr (chromosome), pos (position within the chromosome), ref (reference base), alt (mutated base). Only list independent events as mutations. An example of the format of the table:
 
@@ -39,6 +39,7 @@ Coselenss returns a dataframe with effect sizes and p-values for differential se
 * pall: p-value for differential selection in all substitutions (pmis and ptrunc).
 * pind: p-value for differential selection in small indels.
 * pglobal: Fisher's combined p-value for pall and pind.
+* qall: q-value of pall using Benjamini-Hochberg correction
 * qglobal: q-value of pglobal using Benjamini-Hochberg correction.
 
 Note that the Fisher’s combined value of pglobal/qglobal may be too conservative if the sensitivity of the pall or pind test is low. In our experience with cancer somatic mutation data, the indel test (pind) only reaches acceptable sensitivity levels if the sample size is large (>100) and indels are frequent. Otherwise, the low sensitivity of the indel test results in non-significant values of pglobal, despite the presence of substantial differential selection on substitutions. Thus, we recommend using pall/qall to assess significance of differential selection on substitutions, while restricting pglobal/qglobal to datasets with large sample sizes and genes in which indels are the main subject of selection.
