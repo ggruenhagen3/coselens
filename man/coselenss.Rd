@@ -4,7 +4,23 @@
 \alias{coselenss}
 \title{COnditional SELection on the Excess of NonSynonymous Substitutions (coselenss)}
 \usage{
-coselenss(group1, group2, subset.genes.by = NULL, refdb = "hg19")
+coselenss(
+  group1,
+  group2,
+  subset.genes.by = NULL,
+  refdb = "hg19",
+  sm = "192r_3w",
+  kc = "cgc81",
+  cv = "hg19",
+  max_muts_per_gene_per_sample = Inf,
+  max_coding_muts_per_sample = 3000,
+  use_indel_sites = T,
+  min_indels = 5,
+  maxcovs = 20,
+  constrain_wnon_wspl = T,
+  outp = 3,
+  numcode = 1
+)
 }
 \arguments{
 \item{group1}{group of individuals (for example those that contain a mutation in a split_gene)}
@@ -13,7 +29,7 @@ coselenss(group1, group2, subset.genes.by = NULL, refdb = "hg19")
 
 \item{subset.genes.by}{genes to subset results by}
 
-\item{refdb}{Reference database (path to .rda file)}
+\item{...}{other paramters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity}
 }
 \value{
 coselenss returns a dataframe with rows representing and the following columns
@@ -55,9 +71,10 @@ coselenss returns a dataframe with rows representing and the following columns
 }
 }
 \description{
+coselenss identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes.
 Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups,
 and the excess of non-synonymous substitutions between them is found as an estimate for the difference
 in the number of driver mutations. For example, one group can be mutations from individuals in a certain
 cancer type with mutations in a specific gene vs those without mutations in the specific gene.
-A p value is returned for positive conditional selection in each gene in the human reference genome (hg19).
+A p value is returned for differential selection in each gene in the reference genome (default: hg19).
 }
