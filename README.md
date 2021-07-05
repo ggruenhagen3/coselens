@@ -50,24 +50,25 @@ Coselenss was developed to discover epistatic interactions between cancer genes 
 library("coselenss")
 data("group1", package = "coselenss")  # mutations from patients with    mutations in APC
 data("group2", package = "coselenss")  # mutations from patients without mutations in APC
+data("cancer_genes", package = "coselenss")  # cancer genes
 ```
 
 Next, let's detect differential selection in genes with APC in COAD (runtime ~5.5 minutes on a laptop).
 
 ```
-coselenss_res = coselenss(group1, group2)
+coselenss_res = coselenss(group1, group2, subset.genes.by = cancer_genes)
 ```
 
 Use ```head(coselenss_res)```, the output should look like this:
 
 | gene_name | num.drivers.group1 | num.drivers.group2 | pmis | ptrunc | pall | pind| pglobal | qglobal |
 |-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|
-|A1BG       |-0.0002757828|0.003490537|0.6774850|1.0000000|0.9171490|0.28669884|0.6141904|1|
-|A1CF       |-0.0033004353|-0.008295631|0.6058041|1.0000000|0.8753205|1.00000000|0.9918827|1|
-|A2M        |0.0037921837|0.029329399|0.3043810|0.5185936|0.4791242|NaN|NaN|NaN|
-|A2ML1      |0.0295412248|0.040366524|0.7277502|0.7012937|0.8744515|0.09369533|0.2869149|1|
-|A3GALT2    |-0.0047941596|-0.006902210|0.8620675|1.0000000|0.9850200|1.00000000|0.9998872|1|
-|A4GALT     |-0.0012767999|0.017041030|0.1117167|1.0000000|0.2822721|0.23622026|0.2472351|1|
+|ABL1|-8.257161e-05|0.021727512 |0.20264758| 1.0000000| 0.4441491|0.5359755| 0.5797215|       1|
+|ACO1|-1.254983e-03|-0.004122997 |0.94708034| 0.6725580| 0.9125477|0.2687322| 0.5899164|       1|
+|ACVR1|3.590744e-04|0.008633316 |0.40628237| 1.0000000| 0.7083432|1.0000000| 0.9525987|       1|
+|ACVR1B|3.921533e-02|0.039206586 |0.95634987| 0.8988483| 0.9904685|0.3391245| 0.7023388|       1|
+|ACVR2A|1.293825e-02|0.018095464|0.43847259| 0.6886162| 0.6835661|1.0000000| 0.9436165|      1|
+|ACVR2B|8.398367e-03|0.028399806|0.08498634| 0.6456863| 0.2041043|1.0000000| 0.5284514|       1|
 
 Let's find the genes subject to significant significant differential selection by doing the following:
 
@@ -78,7 +79,7 @@ coselenss_res[which(coselenss_res$qglobal < 0.05),]
 The output should look like this:
 | gene_name | num.drivers.group1 | num.drivers.group2 | pmis | ptrunc | pall | pind| pglobal | qglobal |
 |-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|
-|APC        |0.98535779|-0.04327314|4.599838e-02|1.669909e-08|1.661006e-08|0.2386762|8.065981e-08|0.001610938|
-|BRAF       |0.03621197|0.22591651|2.276400e-08|1.821872e-01|6.747822e-08|0.4244034|5.260378e-07|0.005253014|
+|APC|0.98535779|-0.04327314| 4.599838e-02| 1.669909e-08|1.661006e-08| 0.2386762| 8.065981e-08| 3.532899e-05|
+|BRAF|0.03621197|0.22591651| 2.276400e-08| 1.821872e-01|6.747822e-08| 0.4244034| 5.260378e-07| 1.152023e-04|
 
 We detected two genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution, but we have just discovered that there may be conditional selection between APC and BRAF in COAD. Feel free to think outside the box and make discoveries of your own using our tool!
