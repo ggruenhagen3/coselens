@@ -1,4 +1,4 @@
-Package: coselenss
+Package: coselens
 Title: COnditional SELection on the Excess of NonSynonymous Substitutions
 Version: 1.0
 Authors@R: c(

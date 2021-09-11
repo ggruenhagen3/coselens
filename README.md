@@ -1,14 +1,14 @@
-# ![alt text](https://github.com/ggruenhagen3/coselenss/blob/master/icon.png?raw=true)  Coselenss 
-COnditional SELection on the Excess of NonSynonymous Substitutions (coselenss) is an R package to detect gene-level differential selection between two groups of samples. If the samples are grouped based on the value of a binary variable (e.g., the presence/absence of some environmental stress or phenotypic trait), coselenss identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes. Coselenss makes extensive use of the ```dndscv``` R package. In short, the dndscv method estimates the number of nonsynonymous mutations that would be expected in the absence of selection by combining a nucleotide substitution model (196 rates encompassing all possible substitutions in each possible trinucleotide context, estimated from synonymous mutations in the dataset) and a set of genomic covariates which greatly improve the performance of the method at low mutation loads (read more about dndscv [here](https://github.com/im3sanger/dndscv). Then, dn/ds is calculated as the ratio between the observed number of nonsynonymous substitutions (n_obs) and its neutral expectation (n_exp). Finally, the significance of dn/ds is computed through a likelihood ratio test, where the null hypothesis corresponds to dn/ds=1.
+# ![alt text](https://github.com/ggruenhagen3/coselens/blob/master/icon.png?raw=true)  Coselens 
+COnditional SELection on the Excess of NonSynonymous Substitutions (coselens) is an R package to detect gene-level differential selection between two groups of samples. If the samples are grouped based on the value of a binary variable (e.g., the presence/absence of some environmental stress or phenotypic trait), coselens identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes. Coselens makes extensive use of the ```dndscv``` R package. In short, the dndscv method estimates the number of nonsynonymous mutations that would be expected in the absence of selection by combining a nucleotide substitution model (196 rates encompassing all possible substitutions in each possible trinucleotide context, estimated from synonymous mutations in the dataset) and a set of genomic covariates which greatly improve the performance of the method at low mutation loads (read more about dndscv [here](https://github.com/im3sanger/dndscv). Then, dn/ds is calculated as the ratio between the observed number of nonsynonymous substitutions (n_obs) and its neutral expectation (n_exp). Finally, the significance of dn/ds is computed through a likelihood ratio test, where the null hypothesis corresponds to dn/ds=1.
 
-Coselenss expands the dndscv method in two substantial ways. First, it quantifies the difference (rather than the ratio) between the observed number of nonsynonymous substitutions and its neutral expectation (Δn = n_obs - n_exp). This change of perspective is most relevant for applications in which the variable of interest is the number (rather than the fraction) of mutations subject to positive (or negative) selection, such as for the inference of driver mutations in cancer. Second, it uses a modified likelihood ratio test that allows for comparison of Δn between two sets of samples, whose mutation rates and profiles are independently estimated. 
+Coselens expands the dndscv method in two substantial ways. First, it quantifies the difference (rather than the ratio) between the observed number of nonsynonymous substitutions and its neutral expectation (Δn = n_obs - n_exp). This change of perspective is most relevant for applications in which the variable of interest is the number (rather than the fraction) of mutations subject to positive (or negative) selection, such as for the inference of driver mutations in cancer. Second, it uses a modified likelihood ratio test that allows for comparison of Δn between two sets of samples, whose mutation rates and profiles are independently estimated. 
 
-A full length tutorial on how to use coselenss can be found here.
+A full length tutorial on how to use coselens can be found here.
 
 # Installation
-Coselenss makes heavy use of ```dndscv```, but a slightly customized version of this package is used under-the-hood and does **not** require installation. However, coselenss does require the following dependencies: ```BiocManager```, ```devtools```, ```seqinr```, ```MASS```, ```GenomicRanges```, ```Biostrings```, ```IRanges```, and ```MASS```. These can be installed by either ```install.packages()``` or ```BiocManager::install()```. To install coselenss use:
+Coselens makes heavy use of ```dndscv```, but a slightly customized version of this package is used under-the-hood and does **not** require installation. However, coselens does require the following dependencies: ```BiocManager```, ```devtools```, ```seqinr```, ```MASS```, ```GenomicRanges```, ```Biostrings```, ```IRanges```, and ```MASS```. These can be installed by either ```install.packages()``` or ```BiocManager::install()```. To install coselens use:
 ```
-devtools::install_github("ggruenhagen3/coselenss")
+devtools::install_github("ggruenhagen3/coselens")
 ```
 
 # Input
@@ -27,10 +27,10 @@ The input parameters group1 and group2 are two dataframes of mutations, one for 
 |sample3  | 3   | 789 | A   | G  |
 |sample3  | 11  | 987 | G   | C  |
 
-By default, coselenss assumes that the mutation data is mapped to the GRCh37/hg19 assembly of the human reference genome. To use coselenss with different species or assemblies, an alternative reference database (RefCDS object) must be provided with the option refdb. The generation of alternative reference databases can be done using the dndscv package and is explained in [this tutorial](http://htmlpreview.github.io/?http://github.com/im3sanger/dndscv/blob/master/vignettes/buildref.html):
+By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19 assembly of the human reference genome. To use coselens with different species or assemblies, an alternative reference database (RefCDS object) must be provided with the option refdb. The generation of alternative reference databases can be done using the dndscv package and is explained in [this tutorial](http://htmlpreview.github.io/?http://github.com/im3sanger/dndscv/blob/master/vignettes/buildref.html):
 
 # Output
-Coselenss returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
+Coselens returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
 * gene_name: name of gene in which differential selection was studied.
 * num.drivers.group1: estimate of the excess of non-synonymous mutations (Δn) in group 1, with respect to the neutral expectation. In the absence of negative selection, this number corresponds to the average number of driver (i.e., positively selected) mutations per sample  in that gene.
 * num.drivers.group2: idem, for group 2.
@@ -45,22 +45,22 @@ Coselenss returns a dataframe with effect sizes and p-values for differential se
 Note that the Fisher’s combined value of pglobal/qglobal may be too conservative if the sensitivity of the pall or pind test is low. In our experience with cancer somatic mutation data, the indel test (pind) only reaches acceptable sensitivity levels if the sample size is large (>100) and indels are frequent. Otherwise, the low sensitivity of the indel test results in non-significant values of pglobal, despite the presence of substantial differential selection on substitutions. Thus, we recommend using pall/qall to assess significance of differential selection on substitutions, while restricting pglobal/qglobal to datasets with large sample sizes and genes in which indels are the main subject of selection.
 
 # Example
-Coselenss was developed to discover epistatic interactions between cancer genes in specific cancer types. To do that, we searched for differential selection in cancer genes when mutations in another cancer gene were present/absent. As an example, we took a somatic mutation dataset built from biopsies from patients with colorectal cancer (COAD) and split them into two groups, those with mutations in APC and those without mutations in APC. Let's begin, by loading these two mutation datasets.
+Coselens was developed to discover epistatic interactions between cancer genes in specific cancer types. To do that, we searched for differential selection in cancer genes when mutations in another cancer gene were present/absent. As an example, we took a somatic mutation dataset built from biopsies from patients with colorectal cancer (COAD) and split them into two groups, those with mutations in APC and those without mutations in APC. Let's begin, by loading these two mutation datasets.
 
 ```
-library("coselenss")
-data("group1", package = "coselenss")  # mutations from patients with    mutations in APC
-data("group2", package = "coselenss")  # mutations from patients without mutations in APC
-data("cancer_genes", package = "coselenss")  # cancer genes
+library("coselens")
+data("group1", package = "coselens")  # mutations from patients with    mutations in APC
+data("group2", package = "coselens")  # mutations from patients without mutations in APC
+data("cancer_genes", package = "coselens")  # cancer genes
 ```
 
 Next, let's detect differential selection in genes with APC in COAD (runtime ~5.5 minutes on a laptop).
 
 ```
-coselenss_res = coselenss(group1, group2, subset.genes.by = cancer_genes)
+coselens_res = coselens(group1, group2, subset.genes.by = cancer_genes)
 ```
 
-Use ```head(coselenss_res)```, the output should look like this:
+Use ```head(coselens_res)```, the output should look like this:
 
 | gene_name | num.drivers.group1 | num.drivers.group2 | pmis | ptrunc | pall | pind| pglobal | qall    |qglobal |
 |-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|--------|
@@ -74,7 +74,7 @@ Use ```head(coselenss_res)```, the output should look like this:
 Let's find the genes subject to significant significant differential selection by doing the following:
 
 ```
-coselenss_res[which(coselenss_res$qglobal < 0.05),]
+coselens_res[which(coselens_res$qglobal < 0.05),]
 ```
 
 The output should look like this:
