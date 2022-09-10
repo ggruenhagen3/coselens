@@ -39,7 +39,7 @@
 #' @return - nbregind: Negative binomial regression model for indels.
 #' @return - poissmodel: Poisson regression model used to fit the substitution model and the global dNdS values.
 #' @return - wrongmuts: Table of input mutations with a wrong annotation of the reference base (if any).
-#' 
+#'
 #' @export
 
 dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = 3, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1, outmats = F, compare = F, outmutrates = F, wg = F, ex = F, split_gene = "") {
@@ -66,7 +66,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     # [Input] Reference database
     if (refdb == "hg19") {
-        data("dndscv_data_refcds_hg19", package="coselenss")
+        data("dndscv_data_refcds_hg19", package="coselens")
         if (any(gene_list=="CDKN2A")) { # Replace CDKN2A in the input gene list with two isoforms
             gene_list = unique(c(setdiff(gene_list,"CDKN2A"),"CDKN2A.p14arf","CDKN2A.p16INK4a"))
         }
@@ -87,21 +87,21 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     # [Input] Covariates (The user can input a custom set of covariates as a matrix)
     if (is.character(cv)) {
-        data(list=sprintf("dndscv_data_covariates_%s",cv), package="coselenss")
+        data(list=sprintf("dndscv_data_covariates_%s",cv), package="coselens")
     } else {
         covs = cv
     }
 
     # [Input] Known cancer genes (The user can input a gene list as a character vector)
     if (kc[1] %in% c("cgc81")) {
-        data(list=sprintf("dndscv_data_cancergenes_%s",kc), package="coselenss")
+        data(list=sprintf("dndscv_data_cancergenes_%s",kc), package="coselens")
     } else {
         known_cancergenes = kc
     }
 
     # [Input] Substitution model (The user can also input a custom substitution model as a matrix)
     if (length(sm)==1) {
-        data(list=sprintf("dndscv_data_submod_%s",sm), package="coselenss")
+        data(list=sprintf("dndscv_data_submod_%s",sm), package="coselens")
     } else {
         substmodel = sm
     }
@@ -455,7 +455,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             }
 
             covs$gene_name <- rownames(covs) # IMPORTANT
-            
+
             # cat(paste("length of covs: ", nrow(covs), "\n", sep=""))
             # cat(paste("length of genemuts[,c(n_syn,exp_syn)]: ", nrow(genemuts[,c("n_syn","exp_syn")]), "\n", sep=""))
             # print(head(covs[2182,]))
@@ -827,7 +827,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
                 # save(nbrdf,    file = "nbrdf.Rda")
                 # save(covs,    file = "covs.Rda")
                 # save(geneindels,    file = "geneindels.Rda")
-                
+
                 if (sum(!geneindels$excl)<500) { # If there are <500 genes, we run the regression without covariates
                     model = MASS::glm.nb(n_indused ~ offset(log(exp_unif)) - 1 , data = nbrdf)
                 } else {
