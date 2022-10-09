@@ -2,8 +2,6 @@
 calc_ex_ind = function(dnds1) {
   num_patients <- length(as.vector(unique(dnds1$annotmuts$sampleID)))
   excess_ind <- (dnds1$sel_cv$n_ind - dnds1$sel_cv$exp_ind) / num_patients
-  excess_ind <- cbind(dnds1$sel_cv$gene_name,excess_ind)
-  colnames(excess_ind) = c("gene_name","ex_ind")
-  excess_ind$ex_ind = as.numeric(as.vector(excess_ind$ex_ind))
+  excess_ind <- data.frame(gene_name = dnds1$sel_cv$gene_name, ex_ind = as.numeric(as.vector(excess_ind)))
   return(excess_ind)
 }
