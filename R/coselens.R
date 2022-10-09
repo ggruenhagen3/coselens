@@ -101,7 +101,7 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     colnames(out.list[["summary"]]) = cols.for.summary.from.lldf.names
 
     cols.for.full.from.lldf = c(cols.for.summary.from.lldf, c("ex_mis.group1", "ex_mis.group2", "ex_non.group1", "ex_non.group2", "pmis", "ptrunc", paste0(single.test.names, "1"), paste0(single.test.names, "2")))
-    cols.for.full.from.lldf.names = c(cols.for.summary.from.lldf.names, "num.driver.mis.group1", "num.driver.mis.group2", "num.driver.trunc.group1", "num.driver.trunc.group2", "pmis", "ptrunc", paste0(single.test.names, "1"), paste0(single.test.names, "2")))
+    cols.for.full.from.lldf.names = c(cols.for.summary.from.lldf.names, c("num.driver.mis.group1", "num.driver.mis.group2", "num.driver.trunc.group1", "num.driver.trunc.group2", "pmis", "ptrunc", paste0(single.test.names, "1"), paste0(single.test.names, "2")))
     out.list[["full"]] =lldf[,cols.for.full.from.lldf]
     colnames(out.list[["full"]]) = cols.for.full.from.lldf.names
 
