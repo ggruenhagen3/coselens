@@ -94,7 +94,7 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     colnames(lldf)[(ncol(lldf)-length(single.test.names)):ncol(lldf)] = paste0(single.test.names, "2")
 
     # Organize output
-    out.list() = list()
+    out.list = list()
     cols.for.summary.from.lldf = c("gene_name", "ex_tot.group1", "ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "pall", "pind", "pglobal", "qall", "qind", "qglobal")
     cols.for.summary.from.lldf.names = c("gene_name", "num.driver.sub.group1", "num.driver.sub.group2", "num.driver.ind.group1", "num.driver.ind.group2", "psub", "pind", "pglobal", "qsub", "qind", "qglobal")
     out.list[["summary"]] = lldf[,cols.for.summary.from.lldf]
