@@ -4,5 +4,6 @@ calc_ex_ind = function(dnds1) {
   excess_ind <- (dnds1$sel_cv$n_ind - dnds1$sel_cv$exp_ind) / num_patients
   excess_ind <- cbind(dnds1$sel_cv$gene_name,excess_ind)
   colnames(excess_ind) = c("gene_name","ex_ind")
+  excess_ind$ex_ind = as.numeric(as.vector(excess_ind$ex_ind))
   return(excess_ind)
 }
