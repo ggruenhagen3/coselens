@@ -44,7 +44,8 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     # Calculate indel mutation excess
     group1_ex_ind <- calc_ex_ind(group1_dndsout)
     group2_ex_ind <- calc_ex_ind(group2_dndsout)
-    print(head(group1_ex_ind))
+    group1_ex_ind$ex_ind = as.numeric(as.vector(group1_ex_ind$ex_ind))
+    group2_ex_ind$ex_ind = as.numeric(as.vector(group2_ex_ind$ex_ind))
     ex_ind_values <- merge(x=group1_ex_ind[,c("gene_name","ex_ind")], y=group2_ex_ind[,c("gene_name","ex_ind")], by="gene_name", suffixes=c(".group1",".group2"))
     ex_values <- merge(x=ex_values, y=ex_ind_values, by="gene_name")
 
@@ -85,8 +86,7 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     lldf$qglobal = p.adjust(lldf$pglobal, method = "BH")
 
     # Add mutation excess data
-    print(colnames(ex_values))
-    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "ex_mis.group1", "ex_mis.group2", "ex_non.group1", "ex_non.group2", "pmis", "ptrunc")], by = "gene_name")
+    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "ex_mis.group1", "ex_mis.group2", "ex_non.group1", "ex_non.group2")], by = "gene_name")
 
     # Single Group Tests
     single.test.names = c("psub.group", "pind.group", "pmis.group", "ptrunc.group", "qsub.group", "qind.group", "qmis.group", "qtrunc.group")
