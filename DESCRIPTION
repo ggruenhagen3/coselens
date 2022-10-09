@@ -19,7 +19,7 @@ Imports:
   GenomicRanges,
   Biostrings,
   IRanges,
-  MASS
+  geometry
 LazyData: false
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1

@@ -10,7 +10,8 @@
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
-#' @param ... other paramters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity
+#' @param sequenced.gene the gene_list paramater from dndscv, which is a list of genes to restrict the analysis (use for targeted sequencing studies)
+#' @param ... other parameters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity
 #'
 #' @return coselens returns a dataframe with rows representing and the following columns
 #' @return - gene_name: name of gene that conditional selection was calculated in
@@ -26,12 +27,12 @@
 #'
 #' @export
 
-coselens = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1) {
+coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = Inf, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1) {
   # Find dN/dS and CIs
   tryCatch({
     # Calculate dN/dS and the confidence intervals
-    group1_dndsout <- coselens::dndscv(group1, gene_list = NULL, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
-    group2_dndsout <- coselens::dndscv(group2, gene_list = NULL, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
+    group1_dndsout <- coselens::dndscv(group1, gene_list = sequenced.genes, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
+    group2_dndsout <- coselens::dndscv(group2, gene_list = sequenced.genes, refdb = refdb, sm = sm, kc = kc, cv = "hg19", max_muts_per_gene_per_sample = max_muts_per_gene_per_sample, max_coding_muts_per_sample = max_coding_muts_per_sample, use_indel_sites = use_indel_sites, min_indels = min_indels, maxcovs = maxcovs, constrain_wnon_wspl = constrain_wnon_wspl, outp = outp, numcode = numcode, outmats=T, outmutrates = T, wg = F, ex = T)
 
     # Calculate nonsynonymous mutation excess
     group1_ex <- calc_ex(group1_dndsout)
@@ -39,6 +40,12 @@ coselens = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm =
     group1_ex$ex_tot <- group1_ex[,2] + group1_ex[,3]
     group2_ex$ex_tot <- group2_ex[,2] + group2_ex[,3]
     ex_values <- merge(x=group1_ex[,c("gene_name","ex_mis","ex_non","ex_tot")], y=group2_ex[,c("gene_name", "ex_mis", "ex_non", "ex_tot")], by ="gene_name", suffixes=c(".group1", ".group2"))
+
+    # Calculate indel mutation excess
+    group1_ex_ind <- calc_ex_ind(group1_dndsout)
+    group2_ex_ind <- calc_ex_ind(group2_dndsout)
+    ex_ind_values <- merge(x=group1_ex_ind[,c("gene_name","ex_ind")], y=group2_ex_ind[,c("gene_name","ex_ind")], by="gene_name", suffixes=c(".group1",".group2"))
+    ex_values <- merge(x=ex_values, y=ex_ind_values, by="gene_name")
 
     # Put the data in the same order
     group1_sel_cv = group1_dndsout$sel_cv[order(as.numeric(rownames(group1_dndsout$sel_cv))),,drop=FALSE]
@@ -54,7 +61,7 @@ coselens = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm =
     colnames(lldf)[c(ncol(lldf)-2, ncol(lldf)-1, ncol(lldf))] <- c("wmis_cv.group2", "wnon_cv.group2", "llall.group2")
 
     # Alternative Hypothesis Log-Likelihoods for SNV
-    lldf$llall.1   <- lldf$llall.group1   + lldf$llall.group2
+    lldf$llall.1   <- lldf$llall.group1 + lldf$llall.group2
     lldf <- lldf[,c(1, ncol(lldf), 3:ncol(lldf)-1)] # reorder llall.1 to the front
 
     # Optionally subset results by list of genes before p value calculation
@@ -72,19 +79,38 @@ coselens = function(group1, group2, subset.genes.by = NULL, refdb = "hg19", sm =
     lldf <- lldf[order(lldf$pglobal),] # order data by p-values
 
     # Adjust p-values
+    lldf$qind = p.adjust(lldf$pind, method = "BH")
     lldf$qall = p.adjust(lldf$pall, method = "BH")
     lldf$qglobal = p.adjust(lldf$pglobal, method = "BH")
 
     # Add mutation excess data
-    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2")], by = "gene_name")
+    lldf <- merge(x = lldf, y = ex_values[,c("gene_name","ex_tot.group1","ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "ex_mis.group1", "ex_mis.group2", "ex_non.group1", "ex_non.group2", "pmis", "ptrunc")], by = "gene_name")
 
-    # Subset the columns returned and reorder them
-    lldf = lldf[,c("gene_name", "ex_tot.group1", "ex_tot.group2", "pmis", "ptrunc", "pall", "pind", "pglobal", "qall", "qglobal")]
-    colnames(lldf)[2:3] = c("num.drivers.group1", "num.drivers.group2")
+    # Single Group Tests
+    single.test.names = c("psub.group", "pind.group", "pmis.group", "ptrunc.group", "qsub.group", "qind.group", "qmis.group", "qtrunc.group")
+    lldf = merge(x=lldf, y=group1_dndsout[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names):ncol(lldf)] = paste0(single.test.names, "1")
+    lldf = merge(x=lldf, y=group2_dndsout[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names):ncol(lldf)] = paste0(single.test.names, "2")
+
+    # Organize output
+    out.list() = list()
+    cols.for.summary.from.lldf = c("gene_name", "ex_tot.group1", "ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "pall", "pind", "pglobal", "qall", "qind", "qglobal")
+    cols.for.summary.from.lldf.names = c("gene_name", "num.driver.sub.group1", "num.driver.sub.group2", "num.driver.ind.group1", "num.driver.ind.group2", "psub", "pind", "pglobal", "qsub", "qind", "qglobal")
+    out.list[["summary"]] = lldf[,cols.for.summary.from.lldf]
+    colnames(out.list[["summary"]]) = cols.for.summary.from.lldf.names
+
+    cols.for.full.from.lldf = c(cols.for.summary.from.lldf, c("ex_mis.group1", "ex_mis.group2", "ex_non.group1", "ex_non.group2", "pmis", "ptrunc", paste0(single.test.names, "1"), paste0(single.test.names, "2")))
+    cols.for.full.from.lldf.names = c(cols.for.summary.from.lldf.names, "num.driver.mis.group1", "num.driver.mis.group2", "num.driver.trunc.group1", "num.driver.trunc.group2", "pmis", "ptrunc", paste0(single.test.names, "1"), paste0(single.test.names, "2")))
+    out.list[["full"]] =lldf[,cols.for.full.from.lldf]
+    colnames(out.list[["full"]]) = cols.for.full.from.lldf.names
+
+    out.list[["mle_submodel_group1"]] = group1_dndsout$mle_submodel
+    out.list[["mle_submodel_group2"]] = group2_dndsout$mle_submodel
 
     # Return the output
     print("Done.")
-    return(lldf)
+    return(out.list)
 
   }, error=function(err) {
 
