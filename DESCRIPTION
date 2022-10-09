@@ -20,6 +20,13 @@ Imports:
   Biostrings,
   IRanges,
   geometry
+Depends:
+  seqinr,
+  MASS,
+  GenomicRanges,
+  Biostrings,
+  IRanges,
+  geometry
 LazyData: false
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
