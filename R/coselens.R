@@ -91,14 +91,12 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     # Single Group Tests
     single.test.names = c("psub.group", "pind.group", "pmis.group", "ptrunc.group", "qsub.group", "qind.group", "qmis.group", "qtrunc.group")
     lldf = merge(x=lldf, y=group1_sel_cv[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
-    colnames(lldf)[(ncol(lldf)-length(single.test.names)):ncol(lldf)] = paste0(single.test.names, "1")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names)+1):ncol(lldf)] = paste0(single.test.names, "1")
     lldf = merge(x=lldf, y=group2_sel_cv[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
-    colnames(lldf)[(ncol(lldf)-length(single.test.names)):ncol(lldf)] = paste0(single.test.names, "2")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names)+1):ncol(lldf)] = paste0(single.test.names, "2")
 
     # Organize output
     out.list = list()
-    print(cols.for.summary.from.lldf[which(!cols.for.summary.from.lldf %in% colnames(lldf))])
-    print(colnames(lldf))
     cols.for.summary.from.lldf = c("gene_name", "ex_tot.group1", "ex_tot.group2", "ex_ind.group1", "ex_ind.group2", "pall", "pind", "pglobal", "qall", "qind", "qglobal")
     cols.for.summary.from.lldf.names = c("gene_name", "num.driver.sub.group1", "num.driver.sub.group2", "num.driver.ind.group1", "num.driver.ind.group2", "psub", "pind", "pglobal", "qsub", "qind", "qglobal")
     out.list[["summary"]] = lldf[,cols.for.summary.from.lldf]
