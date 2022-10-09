@@ -21,7 +21,7 @@ Imports:
   IRanges,
   geometry
 Depends:
-  R (>= 2.10),
+  R (>= 3.5.0),
   seqinr (>= 4.2-8),
   MASS (>= 7.3-53.1),
   GenomicRanges (>= 1.42.0),
