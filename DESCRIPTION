@@ -21,6 +21,7 @@ Imports:
   IRanges,
   geometry
 Depends:
+  R (>= 2.10)
   seqinr (>= 4.2-8),
   MASS (>= 7.3-53.1),
   GenomicRanges (>= 1.42.0),
@@ -30,5 +31,3 @@ Depends:
 LazyData: false
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Depends: 
-    R (>= 2.10)
