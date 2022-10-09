@@ -89,9 +89,9 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     # Single Group Tests
     single.test.names = c("psub.group", "pind.group", "pmis.group", "ptrunc.group", "qsub.group", "qind.group", "qmis.group", "qtrunc.group")
     lldf = merge(x=lldf, y=group1_dndsout[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
-    colnames(lldf)[(ncol(lldf)-length(single.test.names):ncol(lldf)] = paste0(single.test.names, "1")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names)):ncol(lldf)] = paste0(single.test.names, "1")
     lldf = merge(x=lldf, y=group2_dndsout[,c("gene_name", "pallsubs_cv", "pind_cv", "pmis_cv", "ptrunc_cv", "qallsubs_cv", "qind_cv", "qmis_cv", "qtrunc_cv")], by="gene_name")
-    colnames(lldf)[(ncol(lldf)-length(single.test.names):ncol(lldf)] = paste0(single.test.names, "2")
+    colnames(lldf)[(ncol(lldf)-length(single.test.names)):ncol(lldf)] = paste0(single.test.names, "2")
 
     # Organize output
     out.list() = list()
