@@ -31,6 +31,13 @@ By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19
 
 # Output
 Coselens returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
+
+<details>
+<summary>How do I dropdown?</summary>
+<br>
+This is how you dropdown.
+</details>
+
 * gene_name: name of gene in which differential selection was studied.
 * num.drivers.group1: estimate of the excess of non-synonymous mutations (Δn) in group 1, with respect to the neutral expectation. In the absence of negative selection, this number corresponds to the average number of driver (i.e., positively selected) mutations per sample  in that gene.
 * num.drivers.group2: idem, for group 2.
