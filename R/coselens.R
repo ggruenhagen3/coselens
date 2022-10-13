@@ -10,20 +10,44 @@
 #' @param group1 group of individuals (for example those that contain a mutation in a split_gene)
 #' @param group2 another group of individuals that do NOT contain a mutation in a split_gene
 #' @param subset.genes.by genes to subset results by
-#' @param sequenced.gene the gene_list paramater from dndscv, which is a list of genes to restrict the analysis (use for targeted sequencing studies)
+#' @param sequenced.genes the gene_list paramater from dndscv, which is a list of genes to restrict the analysis (use for targeted sequencing studies)
 #' @param ... other parameters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity
 #'
-#' @return coselens returns a dataframe with rows representing and the following columns
+#' @return coselens returns a list containing four dataframes: 1) "summary" a summary of coselens output that should be sufficient for most users, 2) "full" which includes more detailed output, 3) fitted substitution models for group 1 from dndscv, and 4) fitted substitution models for group 2 from dndscv
 #' @return - gene_name: name of gene that conditional selection was calculated in
-#' @return - num.drivers.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
-#' @return - num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+#' @return - num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+#' @return - num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+#' @return - num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
+#' @return - num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
+#' @return - psub: p-value for conditional selection in non-synonymous substitutions
+#' @return - pind: p-value for conditional selection in indels
+#' @return - pglobal: Fisher's combined p-value for psub and pind
+#' @return - qsub: q-value of psub using Benjamini-Hochberg correction
+#' @return - qind: q-value of pind using Benjamini-Hochberg correction
+#' @return - qglobal: q-value of pglobal using Benjamini-Hochberg correction
+#'
+#' @return - num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
+#' @return - num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
+#' @return - num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
+#' @return - num.driver.trunc.group2: estimate of the number of drivers in group 2 based excess of truncating mutations
 #' @return - pmis: p-value for conditional selection in missense mutations
 #' @return - ptrunc: p-value for conditional selection in truncating mutations
-#' @return - pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
-#' @return - pind: p-value for conditional selection in small indels
-#' @return - pglobal: Fisher's combined p-value for pall and pind
-#' @return - qall: q-value of pall using Benjamini-Hochberg correction
-#' @return - qglobal: q-value of pglobal using Benjamini-Hochberg correction
+#' @return - psub.group1: p-value for selection in group 1 for non-synonymous substitutions
+#' @return - psub.group2: p-value for selection in group 2 for non-synonymous substitutions
+#' @return - pmis.group1: p-value for selection in group 1 for missense substitutions
+#' @return - pmis.group2: p-value for selection in group 2 for missense substitutions
+#' @return - ptrunc.group1: p-value for selection in group 1 for truncating substitutions
+#' @return - ptrunc.group2: p-value for selection in group 2 for truncating substitutions
+#' @return - pind.group1: p-value for selection in group 1 for indels
+#' @return - pind.group2: p-value for selection in group 2 for indels
+#' @return - qsub.group1: q-value of psub.group1 using Benjamini-Hochberg correction
+#' @return - qsub.group2: q-value of psub.group2 using Benjamini-Hochberg correction
+#' @return - qmis.group1: q-value of pmis.group1 using Benjamini-Hochberg correction
+#' @return - qmis.group2: q-value of pmis.group2 using Benjamini-Hochberg correction
+#' @return - qtrunc.group1: q-value of ptrunc.group1 using Benjamini-Hochberg correction
+#' @return - qtrunc.group2: q-value of ptrunc.group2 using Benjamini-Hochberg correction
+#' @return - qind.group1: q-value of pind.group1 using Benjamini-Hochberg correction
+#' @return - qind.group2: q-value of pind.group2 using Benjamini-Hochberg correction
 #'
 #' @export
 
@@ -53,8 +77,7 @@ coselens = function(group1, group2, subset.genes.by = NULL, sequenced.genes = NU
     group1_sel_cv = group1_dndsout$sel_cv[order(as.numeric(rownames(group1_dndsout$sel_cv))),,drop=FALSE]
     group2_sel_cv = group2_dndsout$sel_cv[order(as.numeric(rownames(group2_dndsout$sel_cv))),,drop=FALSE]
 
-    # If necessary correct for the difference in mutational loads between groups by normalizing dN/dS by
-    # a global dN/dS in all cancer genes.
+    # Null Hypothesis Log-Likelihoods
     h0_sel_cv <<- lik_func(group1_dndsout, group2_dndsout)
 
     # Merge the data into one structure
