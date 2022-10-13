@@ -32,19 +32,31 @@ By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19
 # Output
 Coselens returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
 
-* summary:
+* summary: a summary of coselens output that should be sufficient for most users
+<details>
 <summary>More Details</summary>
 <br>
-Summary list details
+* Output Column Descriptions
+  * gene_name: name of gene that conditional selection was calculated in
+  * num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+  * num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+  * num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
+  * num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
+  * psub: p-value for conditional selection in non-synonymous substitutions
+  * pind: p-value for conditional selection in indels
+  * pglobal: Fisher's combined p-value for psub and pind
+  * qsub: q-value of psub using Benjamini-Hochberg correction
+  * qind: q-value of pind using Benjamini-Hochberg correction
+  * qglobal: q-value of pglobal using Benjamini-Hochberg correction
 </details>
-* full: 
+* full: similar to summary, but with more columns
 <details>
 <summary>More Details</summary>
 <br>
 Full list details
 </details>
-* mle_submodel_group1: 
-* mle_submodel_group2: 
+* mle_submodel_group1: fitted substitution models for group 1 from dndscv
+* mle_submodel_group2: fitted substitution models for group 2 from dndscv
 
 * gene_name: name of gene in which differential selection was studied.
 * num.drivers.group1: estimate of the excess of non-synonymous mutations (Δn) in group 1, with respect to the neutral expectation. In the absence of negative selection, this number corresponds to the average number of driver (i.e., positively selected) mutations per sample  in that gene.
