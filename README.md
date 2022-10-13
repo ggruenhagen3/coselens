@@ -30,44 +30,59 @@ The input parameters group1 and group2 are two dataframes of mutations, one for 
 By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19 assembly of the human reference genome. To use coselens with different species or assemblies, an alternative reference database (RefCDS object) must be provided with the option refdb. The generation of alternative reference databases can be done using the dndscv package and is explained in [this tutorial](http://htmlpreview.github.io/?http://github.com/im3sanger/dndscv/blob/master/vignettes/buildref.html):
 
 # Output
-Coselens returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
+Coselens returns a list of 4 dataframes. The first is probably the most pertinent to the majority of users, it contains information on effect sizes and p-values for differential selection of genes between the input groups. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. Detailed descriptions of each of the 4 dataframes are below.
 
 * summary: a summary of coselens output that should be sufficient for most users
-<details>
-<summary>More Details</summary>
-<br>
-* Output Column Descriptions
-  * gene_name: name of gene that conditional selection was calculated in
-  * num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
-  * num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
-  * num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
-  * num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
-  * psub: p-value for conditional selection in non-synonymous substitutions
-  * pind: p-value for conditional selection in indels
-  * pglobal: Fisher's combined p-value for psub and pind
-  * qsub: q-value of psub using Benjamini-Hochberg correction
-  * qind: q-value of pind using Benjamini-Hochberg correction
-  * qglobal: q-value of pglobal using Benjamini-Hochberg correction
-</details>
+  <details>
+  <summary>More Details</summary>
+  <br>
+ 
+  * Output Column Descriptions
+    * gene_name: name of gene that conditional selection was calculated in
+    * num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+    * num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+    * num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
+    * num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
+    * psub: p-value for conditional selection in non-synonymous substitutions
+    * pind: p-value for conditional selection in indels
+    * pglobal: Fisher's combined p-value for psub and pind
+    * qsub: q-value of psub using Benjamini-Hochberg correction
+    * qind: q-value of pind using Benjamini-Hochberg correction
+    * qglobal: q-value of pglobal using Benjamini-Hochberg correction
+  </details>
+
 * full: similar to summary, but with more columns
-<details>
-<summary>More Details</summary>
-<br>
-Full list details
-</details>
+  <details>
+  <summary>More Details</summary>
+  <br>
+
+  * Output Column Descriptions (same as summary w/ the following additions):
+    * num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
+    * num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
+    * num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
+    * num.driver.trunc.group2: estimate of the number of drivers in group 2 based excess of truncating mutations
+    * pmis: p-value for conditional selection in missense mutations
+    * ptrunc: p-value for conditional selection in truncating mutations
+    * psub.group1: p-value for selection in group 1 for non-synonymous substitutions
+    * psub.group2: p-value for selection in group 2 for non-synonymous substitutions
+    * pmis.group1: p-value for selection in group 1 for missense substitutions
+    * pmis.group2: p-value for selection in group 2 for missense substitutions
+    * ptrunc.group1: p-value for selection in group 1 for truncating substitutions
+    * ptrunc.group2: p-value for selection in group 2 for truncating substitutions
+    * pind.group1: p-value for selection in group 1 for indels
+    * pind.group2: p-value for selection in group 2 for indels
+    * qsub.group1: q-value of psub.group1 using Benjamini-Hochberg correction
+    * qsub.group2: q-value of psub.group2 using Benjamini-Hochberg correction
+    * qmis.group1: q-value of pmis.group1 using Benjamini-Hochberg correction
+    * qmis.group2: q-value of pmis.group2 using Benjamini-Hochberg correction
+    * qtrunc.group1: q-value of ptrunc.group1 using Benjamini-Hochberg correction
+    * qtrunc.group2: q-value of ptrunc.group2 using Benjamini-Hochberg correction
+    * qind.group1: q-value of pind.group1 using Benjamini-Hochberg correction
+    * qind.group2: q-value of pind.group2 using Benjamini-Hochberg correction
+  </details>
+
 * mle_submodel_group1: fitted substitution models for group 1 from dndscv
 * mle_submodel_group2: fitted substitution models for group 2 from dndscv
-
-* gene_name: name of gene in which differential selection was studied.
-* num.drivers.group1: estimate of the excess of non-synonymous mutations (Δn) in group 1, with respect to the neutral expectation. In the absence of negative selection, this number corresponds to the average number of driver (i.e., positively selected) mutations per sample  in that gene.
-* num.drivers.group2: idem, for group 2.
-* pmis: p-value for differential selection in missense mutations.
-* ptrunc: p-value for differential selection in truncating mutations.
-* pall: p-value for differential selection in all substitutions (pmis and ptrunc).
-* pind: p-value for differential selection in small indels.
-* pglobal: Fisher's combined p-value for pall and pind.
-* qall: q-value of pall using Benjamini-Hochberg correction
-* qglobal: q-value of pglobal using Benjamini-Hochberg correction.
 
 Note that the Fisher’s combined value of pglobal/qglobal may be too conservative if the sensitivity of the pall or pind test is low. In our experience with cancer somatic mutation data, the indel test (pind) only reaches acceptable sensitivity levels if the sample size is large (>100) and indels are frequent. Otherwise, the low sensitivity of the indel test results in non-significant values of pglobal, despite the presence of substantial differential selection on substitutions. Thus, we recommend using pall/qall to assess significance of differential selection on substitutions, while restricting pglobal/qglobal to datasets with large sample sizes and genes in which indels are the main subject of selection.
 
