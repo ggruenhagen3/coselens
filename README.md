@@ -33,10 +33,15 @@ By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19
 Coselens returns a dataframe with effect sizes and p-values for differential selection in of the reference genome. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. The columns returned are described as follows:
 
 * summary:
-* full: <details>
 <summary>More Details</summary>
 <br>
-This is how you dropdown.
+Summary list details
+</details>
+* full: 
+<details>
+<summary>More Details</summary>
+<br>
+Full list details
 </details>
 * mle_submodel_group1: 
 * mle_submodel_group2: 
