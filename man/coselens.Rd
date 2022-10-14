@@ -8,6 +8,7 @@ coselens(
   group1,
   group2,
   subset.genes.by = NULL,
+  sequenced.genes = NULL,
   refdb = "hg19",
   sm = "192r_3w",
   kc = "cgc81",
@@ -29,21 +30,73 @@ coselens(
 
 \item{subset.genes.by}{genes to subset results by}
 
-\item{...}{other paramters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity}
+\item{sequenced.genes}{the gene_list paramater from dndscv, which is a list of genes to restrict the analysis (use for targeted sequencing studies)}
+
+\item{...}{other parameters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity}
 }
 \value{
-coselens returns a dataframe with rows representing and the following columns
+coselens returns a list containing four dataframes: 1) "summary" a summary of coselens output that should be sufficient for most users, 2) "full" which includes more detailed output, 3) fitted substitution models for group 1 from dndscv, and 4) fitted substitution models for group 2 from dndscv. The "summary" dataframe contains the following:
 
 \itemize{
 \item gene_name: name of gene that conditional selection was calculated in
 }
 
 \itemize{
-\item num.drivers.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+\item num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
 }
 
 \itemize{
-\item num.drivers.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+\item num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+}
+
+\itemize{
+\item num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
+}
+
+\itemize{
+\item num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
+}
+
+\itemize{
+\item psub: p-value for conditional selection in non-synonymous substitutions
+}
+
+\itemize{
+\item pind: p-value for conditional selection in indels
+}
+
+\itemize{
+\item pglobal: Fisher's combined p-value for psub and pind
+}
+
+\itemize{
+\item qsub: q-value of psub using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qind: q-value of pind using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qglobal: q-value of pglobal using Benjamini-Hochberg correction
+}
+
+The "full" dataframe contains all the informtion from the "summary" dataframe, with the following additional columns:
+
+\itemize{
+\item num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
+}
+
+\itemize{
+\item num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
+}
+
+\itemize{
+\item num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
+}
+
+\itemize{
+\item num.driver.trunc.group2: estimate of the number of drivers in group 2 based excess of truncating mutations
 }
 
 \itemize{
@@ -55,23 +108,67 @@ coselens returns a dataframe with rows representing and the following columns
 }
 
 \itemize{
-\item pall: p-value for conditional selection in all substitutions (pmis and ptrunc)
+\item psub.group1: p-value for selection in group 1 for non-synonymous substitutions
 }
 
 \itemize{
-\item pind: p-value for conditional selection in small indels
+\item psub.group2: p-value for selection in group 2 for non-synonymous substitutions
 }
 
 \itemize{
-\item pglobal: Fisher's combined p-value for pall and pind
+\item pmis.group1: p-value for selection in group 1 for missense substitutions
 }
 
 \itemize{
-\item qall: q-value of pall using Benjamini-Hochberg correction
+\item pmis.group2: p-value for selection in group 2 for missense substitutions
 }
 
 \itemize{
-\item qglobal: q-value of pglobal using Benjamini-Hochberg correction
+\item ptrunc.group1: p-value for selection in group 1 for truncating substitutions
+}
+
+\itemize{
+\item ptrunc.group2: p-value for selection in group 2 for truncating substitutions
+}
+
+\itemize{
+\item pind.group1: p-value for selection in group 1 for indels
+}
+
+\itemize{
+\item pind.group2: p-value for selection in group 2 for indels
+}
+
+\itemize{
+\item qsub.group1: q-value of psub.group1 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qsub.group2: q-value of psub.group2 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qmis.group1: q-value of pmis.group1 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qmis.group2: q-value of pmis.group2 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qtrunc.group1: q-value of ptrunc.group1 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qtrunc.group2: q-value of ptrunc.group2 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qind.group1: q-value of pind.group1 using Benjamini-Hochberg correction
+}
+
+\itemize{
+\item qind.group2: q-value of pind.group2 using Benjamini-Hochberg correction
 }
 }
 \description{

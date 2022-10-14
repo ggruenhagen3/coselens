@@ -84,5 +84,8 @@ get_effect_size = function(coselens_full, mutation.class = "sub") {
   effectSz$pval = pval
   effectSz$qval = qval
 
+  effectSz$gene_name = coselens_full$gene_name
+  effectSz = effectSz[,c(ncol(effectSz), 1:(ncol(effectSz)-1))]
+
   return(effectSz)
 }

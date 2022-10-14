@@ -13,7 +13,7 @@
 #' @param sequenced.genes the gene_list paramater from dndscv, which is a list of genes to restrict the analysis (use for targeted sequencing studies)
 #' @param ... other parameters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity
 #'
-#' @return coselens returns a list containing four dataframes: 1) "summary" a summary of coselens output that should be sufficient for most users, 2) "full" which includes more detailed output, 3) fitted substitution models for group 1 from dndscv, and 4) fitted substitution models for group 2 from dndscv
+#' @return coselens returns a list containing four dataframes: 1) "summary" a summary of coselens output that should be sufficient for most users, 2) "full" which includes more detailed output, 3) fitted substitution models for group 1 from dndscv, and 4) fitted substitution models for group 2 from dndscv. The "summary" dataframe contains the following:
 #' @return - gene_name: name of gene that conditional selection was calculated in
 #' @return - num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
 #' @return - num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
@@ -26,6 +26,7 @@
 #' @return - qind: q-value of pind using Benjamini-Hochberg correction
 #' @return - qglobal: q-value of pglobal using Benjamini-Hochberg correction
 #'
+#' @return The "full" dataframe contains all the informtion from the "summary" dataframe, with the following additional columns:
 #' @return - num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
 #' @return - num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
 #' @return - num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
