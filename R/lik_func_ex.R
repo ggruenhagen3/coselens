@@ -30,11 +30,8 @@ lik_func = function(dnds1, dnds2) {
     shape_B = dnds2$nbreg$theta
     scale_B = y_B[9]/dnds2$nbreg$theta
     
-    # print(xB_N)
-    # print(xB_L)
     numrates = length(dnds1$mutrates)
     
-    # d
     indneut = 1
     opt_t_A = mle_tcv(n_neutral=sum(y_A[indneut]), exp_rel_neutral=sum(exp_rel_A[indneut]), shape=shape_A, scale=scale_A)
     opt_t_B = mle_tcv(n_neutral=sum(y_B[indneut]), exp_rel_neutral=sum(exp_rel_B[indneut]), shape=shape_B, scale=scale_B)
@@ -87,28 +84,44 @@ lik_func = function(dnds1, dnds2) {
     wind_T_A = 1 + ((excess_ind_T * num_patients_A) / exp_ind_A)
     wind_T_B = 1 + ((excess_ind_T * num_patients_B) / exp_ind_B)
     
-    # Prevent division by 0 (is this necessary anymore? I think this can be deleted?)
-    wmis_T_A = ifelse(n_obs_mis_A > 0, wmis_T_A, 0)
-    wmis_T_B = ifelse(n_obs_mis_B > 0, wmis_T_B, 0)
-    wnon_T_A = ifelse(n_obs_non_A > 0, wnon_T_A, 0)
-    wnon_T_B = ifelse(n_obs_non_B > 0, wnon_T_B, 0)
+    # Prevent negative dn/ds in joint estimates: in those cases, estimate the total dn/ds as (obs_A + obs_B)/(exp_A + exp_B). This is equivalent to testing for differences dn/ds instead of Delta.Nd, which is reasonable in the case of negative selection. 
+    wmis_T_A_new = ifelse(wmis_T_A > 0 & wmis_T_B >0, wmis_T_A, (n_obs_mis_A + n_obs_mis_B)/(n_exp_mis_A * mrfold_A + n_exp_mis_B * mrfold_B))
+    wmis_T_B_new = ifelse(wmis_T_A > 0 & wmis_T_B >0, wmis_T_B, (n_obs_mis_A + n_obs_mis_B)/(n_exp_mis_A * mrfold_A + n_exp_mis_B * mrfold_B))
+    wnon_T_A_new = ifelse(wnon_T_A > 0 & wnon_T_B >0, wnon_T_A, (n_obs_non_A + n_obs_non_B)/(n_exp_non_A * mrfold_A + n_exp_non_B * mrfold_B))
+    wnon_T_B_new = ifelse(wnon_T_A > 0 & wnon_T_B >0, wnon_T_B, (n_obs_non_A + n_obs_non_B)/(n_exp_non_A * mrfold_A + n_exp_non_B * mrfold_B))
+    wind_T_A_new = ifelse(wind_T_A > 0 & wind_T_B >0, wind_T_A, (n_ind_A + n_ind_B)/(exp_ind_A + exp_ind_B))
+    wind_T_B_new = ifelse(wind_T_A > 0 & wind_T_B >0, wind_T_B, (n_ind_A + n_ind_B)/(exp_ind_A + exp_ind_B))
+    wmis_T_A = wmis_T_A_new
+    wmis_T_B = wmis_T_B_new
+    wnon_T_A = wnon_T_A_new
+    wnon_T_B = wnon_T_B_new
+    wind_T_A = wind_T_A_new
+    wind_T_B = wind_T_B_new
     
-    wmis_A = ifelse(n_obs_mis_A > 0, wmis_A, 0)
-    wmis_B = ifelse(n_obs_mis_B > 0, wmis_B, 0)
-    wnon_A = ifelse(n_obs_non_A > 0, wnon_A, 0)
-    wnon_B = ifelse(n_obs_non_B > 0, wnon_B, 0)
+    # Alternative (more onservative) approach to deal with negative dn/ds: replace them by NA. Accompany this by a note explaining that NA's are associated with cases of conditional purifying selection. In some of those cases the assumptions of the null model are violated and it is not feasible to compare differences in the number of purged mutations.
+    # wmis_T_A = ifelse(wmis_T_A > 0, wmis_T_A, NA)
+    # wmis_T_B = ifelse(wmis_T_B > 0, wmis_T_B, NA)
+    # wnon_T_A = ifelse(wnon_T_A > 0, wnon_T_A, NA)
+    # wnon_T_B = ifelse(wnon_T_B > 0, wnon_T_B, NA)
+    # wind_T_A = ifelse(wind_T_A > 0, wind_T_A, NA)
+    # wind_T_B = ifelse(wind_T_B > 0, wind_T_B, NA)
     
-    wind_A   = ifelse(n_ind_A > 0, wind_A, 0)
-    wind_B   = ifelse(n_ind_B > 0, wind_B, 0)
-    wind_T_A = ifelse(n_ind_A > 0, wind_T_A, 0)
-    wind_T_B = ifelse(n_ind_B > 0, wind_T_B, 0)
+    # Correct negative cases in single-group estimates (these are sometimes produced due to numerical errors and can safely be made zero)
+    wmis_A = ifelse(wmis_A > 0, wmis_A, 0)
+    wmis_B = ifelse(wmis_B > 0, wmis_B, 0)
+    wnon_A = ifelse(wnon_A > 0, wnon_A, 0)
+    wnon_B = ifelse(wnon_B > 0, wnon_B, 0)
+    wind_A = ifelse(wind_A > 0, wind_A, 0)
+    wind_B = ifelse(wind_B > 0, wind_B, 0)
     
     theta_indels_A <- dnds1$nbregind$theta
     theta_indels_B <- dnds2$nbregind$theta
     
     # Log likelihood for Indels
-    llind1 = pnbinom(q=n_ind_A-1, mu=exp_ind_A * wind_A,   size=theta_indels_A, lower.tail=F,log=T) + pnbinom(q=n_ind_B-1, mu=exp_ind_B * wind_B,   size=theta_indels_B, lower.tail=F,log=T)
-    llind0 = pnbinom(q=n_ind_A-1, mu=exp_ind_A * wind_T_A, size=theta_indels_A, lower.tail=F,log=T) + pnbinom(q=n_ind_B-1, mu=exp_ind_B * wind_T_B, size=theta_indels_B, lower.tail=F,log=T)
+    #llind1 = pnbinom(q=n_ind_A-1, mu=exp_ind_A * wind_A,   size=theta_indels_A, lower.tail=F,log=T) + pnbinom(q=n_ind_B-1, mu=exp_ind_B * wind_B,   size=theta_indels_B, lower.tail=F,log=T)
+    #llind0 = pnbinom(q=n_ind_A-1, mu=exp_ind_A * wind_T_A, size=theta_indels_A, lower.tail=F,log=T) + pnbinom(q=n_ind_B-1, mu=exp_ind_B * wind_T_B, size=theta_indels_B, lower.tail=F,log=T)
+    llind1 = dnbinom(x=n_ind_A, mu=exp_ind_A * wind_A,   size=theta_indels_A,log=T) + dnbinom(x=n_ind_B, mu=exp_ind_B * wind_B,   size=theta_indels_B,log=T)
+    llind0 = dnbinom(x=n_ind_A, mu=exp_ind_A * wind_T_A, size=theta_indels_A,log=T) + dnbinom(x=n_ind_B, mu=exp_ind_B * wind_T_B, size=theta_indels_B,log=T)
     
     # Log likelihood for SNV
     llmis_A = sum(dpois(x=xA_N, lambda=xA_L*dnds1$mutrates*mrfold_A*t(array(c(1,wmis_T_A,wnon_A,wnon_A),dim=c(4,numrates))), log=T)) + dgamma(opt_t_A, shape=shape_A, scale=scale_A, log=T)

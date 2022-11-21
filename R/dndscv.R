@@ -1,13 +1,13 @@
 #' dNdScv
 #'
-#' Analyses of selection using the dNdScv and dNdSloc models. Default parameters typically increase the performance of the method on cancer genomic studies. Reference files are currently only available for the GRCh37/hg19 version of the human genome.
+#' Analyses of selection using the dNdScv and dNdSloc models. Default parameters typically increase the performance of the method on cancer genomic studies. Default arguments use the GRCh37/hg19 version of the human genome. To run dNdScv on other assemblies or species see the buildref function and the dndscv_data GitHub repository.
 #'
 #' @author Inigo Martincorena (Wellcome Sanger Institute)
 #' @details Martincorena I, et al. (2017) Universal patterns of selection in cancer and somatic tissues. Cell. 171(5):1029-1041.
 #'
 #' @param mutations Table of mutations (5 columns: sampleID, chr, pos, ref, alt). Only list independent events as mutations.
 #' @param gene_list List of genes to restrict the analysis (use for targeted sequencing studies)
-#' @param refdb Reference database (path to .rda file)
+#' @param refdb Reference database (path to .rda file or a pre-loaded array object in the right format)
 #' @param sm Substitution model (precomputed models are available in the data directory)
 #' @param kc List of a-priori known cancer genes (to be excluded from the indel background model)
 #' @param cv Covariates (a matrix of covariates -columns- for each gene -rows-) [default: reference covariates] [cv=NULL runs dndscv without covariates]
@@ -20,11 +20,8 @@
 #' @param outp Output: 1 = Global dN/dS values; 2 = Global dN/dS and dNdSloc; 3 = Global dN/dS, dNdSloc and dNdScv
 #' @param numcode NCBI genetic code number (default = 1; standard genetic code). To see the list of genetic codes supported use: ? seqinr::translate. Note that the same genetic code must be used in the dndscv and buildref functions.
 #' @param outmats Output the internal N and L matrices (default = F)
-#' @param compare Compare dN/dS for two groups (default = F)
-#' @param outmutrates Output internal mutation rates (default = F)
-#' @param wg Control for global dN/dS (default = F)
-#' @param ex Compare excess of nonsynonymous mutations (default = F)
-#' @param split_gene The gene the patients are split by (default = "")
+#' @param outmutrates Output the internal mutation rates (default = F)
+#' @param mingenecovs Minimum number of genes required to run the negative binomial regression model with covariates (default = 500)
 #'
 #' @return 'dndscv' returns a list of objects:
 #' @return - globaldnds: Global dN/dS estimates across all genes.
@@ -32,6 +29,7 @@
 #' @return - sel_loc: Gene-wise selection results using dNdSloc.
 #' @return - annotmuts: Annotated coding mutations.
 #' @return - genemuts: Observed and expected numbers of mutations per gene.
+#' @return - geneindels: Observed and expected numbers of indels per gene.
 #' @return - mle_submodel: MLEs of the substitution model.
 #' @return - exclsamples: Samples excluded from the analysis.
 #' @return - exclmuts: Coding mutations excluded from the analysis.
@@ -42,16 +40,14 @@
 #'
 #' @export
 
-dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = 3, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1, outmats = F, compare = F, outmutrates = F, wg = F, ex = F, split_gene = "") {
-  message("Using coselens local version of dndscv (Aug 23-3)")
+dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", kc = "cgc81", cv = "hg19", max_muts_per_gene_per_sample = 3, max_coding_muts_per_sample = 3000, use_indel_sites = T, min_indels = 5, maxcovs = 20, constrain_wnon_wspl = T, outp = 3, numcode = 1, outmats = F, outmutrates = F, mingenecovs = 500) {
+
+    message("Using coselens local version of dndscv (Nov 15, 2022)")
+
     ## 1. Environment
     message("[1] Loading the environment...")
 
-    # Restricting input matrix to first 5 columns *EDIT*
-    if (compare == FALSE) {
-        set.seed(5)
-        mutations = mutations[,1:5] # Restricting input matrix to first 5 columns
-    }
+    mutations = mutations[,1:5] # Restricting input matrix to first 5 columns
     mutations[,c(1,2,3,4,5)] = lapply(mutations[,c(1,2,3,4,5)], as.character) # Factors to character
     mutations[[3]] = as.numeric(mutations[[3]]) # Chromosome position as numeric
     mutations = mutations[mutations[,4]!=mutations[,5],] # Removing mutations with identical reference and mutant base
@@ -65,13 +61,23 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
     }
 
     # [Input] Reference database
-    if (refdb == "hg19") {
-        data("dndscv_data_refcds_hg19", package="coselens")
-        if (any(gene_list=="CDKN2A")) { # Replace CDKN2A in the input gene list with two isoforms
-            gene_list = unique(c(setdiff(gene_list,"CDKN2A"),"CDKN2A.p14arf","CDKN2A.p16INK4a"))
+    refdb_class = class(refdb)
+    if ("character" %in% refdb_class) {
+        if (refdb == "hg19") {
+            # *EDIT BEGINS*
+            data("dndscv_data_refcds_hg19", package="coselens")
+            # *EDIT ENDS*
+            if (any(gene_list=="CDKN2A")) { # Replace CDKN2A in the input gene list with two isoforms
+                gene_list = unique(c(setdiff(gene_list,"CDKN2A"),"CDKN2A.p14arf","CDKN2A.p16INK4a"))
+            }
+        } else {
+            load(refdb)
         }
+    } else if("array" %in% refdb_class) {
+        # use the user-supplied RefCDS object
+        RefCDS = refdb
     } else {
-        load(refdb)
+        stop("Expected refdb to be \"hg19\", a file path, or a RefCDS-formatted array object.")
     }
 
     # [Input] Gene list (The user can input a gene list as a character vector)
@@ -85,23 +91,37 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
         gr_genes = gr_genes[gr_genes$names %in% gene_list] # Only input genes
     }
 
-    # [Input] Covariates (The user can input a custom set of covariates as a matrix)
-    if (is.character(cv)) {
-        data(list=sprintf("dndscv_data_covariates_%s",cv), package="coselens")
-    } else {
+    # [Input] Covariates (The user can input a custom set of covariates as path to a .rds file or a data frame)
+    # *EDIT BEGINS*
+    cv_class = class(cv)
+    if ("character" %in% cv_class) {
+        if (cv == "hg19") {
+            data(list=sprintf("dndscv_data_covariates_%s",cv), package="coselens")        
+        } else {
+            covs = readRDS(cv)
+        }
+    } else if("data.frame" %in% cv_class) {
+        # use the user-supplied covariance matrix
         covs = cv
+    } else {
+        stop("Expected covariance input to be \"hg19\", a file path (.rds), or a matrix.")
     }
+    # *EDIT ENDS*
 
     # [Input] Known cancer genes (The user can input a gene list as a character vector)
     if (kc[1] %in% c("cgc81")) {
+        # *EDIT BEGINS*
         data(list=sprintf("dndscv_data_cancergenes_%s",kc), package="coselens")
+        # *EDIT ENDS*
     } else {
         known_cancergenes = kc
     }
 
     # [Input] Substitution model (The user can also input a custom substitution model as a matrix)
     if (length(sm)==1) {
+        # *EDIT BEGINS*
         data(list=sprintf("dndscv_data_submod_%s",sm), package="coselens")
+        # *EDIT ENDS*
     } else {
         substmodel = sm
     }
@@ -181,7 +201,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
 
     mutations$strand = sapply(RefCDS,function(x) x$strand)[mutations$geneind]
     snv = (mutations$ref %in% nt & mutations$mut %in% nt)
-    if (!any(snv)) { stop("Zero coding substitutions found in this dataset. Unable to run dndscv.") }
+    if (!any(snv)) { stop("Zero coding substitutions found in this dataset. Unable to run dndscv. Common causes for this error are inputting only indels or using chromosome names different to those in the reference database (e.g. chr1 vs 1)") }
     indels = mutations[!snv,]
     mutations = mutations[snv,]
     mutations$ref_cod = mutations$ref
@@ -206,9 +226,6 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
     }
 
     # Annotating the functional impact of each substitution and populating the N matrices
-    # *EDIT*
-    RefCDSA = RefCDS
-    RefCDSB = RefCDS
 
     ref3_cod = mut3_cod = wrong_ref = aachange = ntchange = impact = codonsub = array(NA, nrow(mutations))
 
@@ -258,17 +275,7 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             wrong_ref[j] = 1
         } else if (!is.na(impind)) { # Correct base annotation in the input mutation file
             trisub = trinucsubsind[ paste(ref3_cod[j], mut3_cod[j], sep=">") ]
-
-            # *EDIT*
-            if (compare == TRUE) {
-                if (mutations[j,6] == "A") {
-                    RefCDSA[[geneind]]$N[trisub,impind] = RefCDSA[[geneind]]$N[trisub,impind] + 1 # Adding the mutation to the N matrices
-                } else {
-                    RefCDSB[[geneind]]$N[trisub,impind] = RefCDSB[[geneind]]$N[trisub,impind] + 1 # Adding the mutation to the N matrices
-                }
-            }
             RefCDS[[geneind]]$N[trisub,impind] = RefCDS[[geneind]]$N[trisub,impind] + 1 # Adding the mutation to the N matrices
-
         }
 
         if (round(j/1e4)==(j/1e4)) { message(sprintf('    %0.3g%% ...', round(j/nrow(mutations),2)*100)) }
@@ -368,35 +375,17 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
     s1 = gsub("wmis","wall",gsub("wnon","wall",gsub("wspl","wall",substmodel)))
     par1 = fit_substmodel(N, L, s1)$par # Substitution model with 1 selection parameter
     s2 = gsub("wnon","wtru",gsub("wspl","wtru",substmodel))
-    par2 = fit_substmodel(N, L, s2)$par # Substitution model with 1 selection parameter
+    par2 = fit_substmodel(N, L, s2)$par # Substitution model with 2 selection parameter
     globaldnds = rbind(par, par1, par2)[c("wmis","wnon","wspl","wtru","wall"),]
     sel_loc = sel_cv = NULL
 
     ## 4. dNdSloc: variable rate dN/dS model (gene mutation rate inferred from synonymous subs in the gene only)
 
-    genemuts = data.frame(gene_name = sapply(RefCDS, function(x) x$gene_name), n_syn=NA, n_mis=NA, n_non=NA, n_spl=NA, exp_syn=NA, exp_mis=NA, exp_non=NA, exp_spl=NA)
+    genemuts = data.frame(gene_name = sapply(RefCDS, function(x) x$gene_name), n_syn=NA, n_mis=NA, n_non=NA, n_spl=NA, exp_syn=NA, exp_mis=NA, exp_non=NA, exp_spl=NA, stringsAsFactors=F)
     genemuts[,2:5] = t(sapply(RefCDS, function(x) colSums(x$N)))
     mutrates = sapply(substmodel[,1], function(x) prod(parmle[base::strsplit(x,split="\\*")[[1]]])) # Expected rate per available site
     genemuts[,6:9] = t(sapply(RefCDS, function(x) colSums(x$L*mutrates)))
     numrates = length(mutrates)
-
-    # save(RefCDS,    file = "RefCDS.Rda")
-    # save(mutrates,    file = "mutrates.Rda")
-
-    # *EDIT*
-    if (compare == TRUE) {
-        genemutsA = data.frame(gene_name = sapply(RefCDSA, function(x) x$gene_name), n_syn=NA, n_mis=NA, n_non=NA, n_spl=NA, exp_syn=NA, exp_mis=NA, exp_non=NA, exp_spl=NA)
-        genemutsA[,2:5] = t(sapply(RefCDSA, function(x) colSums(x$N)))
-        mutratesA = sapply(substmodel[,1], function(x) prod(parmle[base::strsplit(x,split="\\*")[[1]]])) # Expected rate per available site
-        genemutsA[,6:9] = t(sapply(RefCDSA, function(x) colSums(x$L*mutrates)))
-        numratesA = length(mutratesA)
-
-        genemutsB = data.frame(gene_name = sapply(RefCDSB, function(x) x$gene_name), n_syn=NA, n_mis=NA, n_non=NA, n_spl=NA, exp_syn=NA, exp_mis=NA, exp_non=NA, exp_spl=NA)
-        genemutsB[,2:5] = t(sapply(RefCDSB, function(x) colSums(x$N)))
-        mutratesB = sapply(substmodel[,1], function(x) prod(parmle[base::strsplit(x,split="\\*")[[1]]])) # Expected rate per available site
-        genemutsB[,6:9] = t(sapply(RefCDSB, function(x) colSums(x$L*mutrates)))
-        numratesB = length(mutratesB)
-    }
 
     if (outp > 1) {
         message("[4] Running dNdSloc...")
@@ -441,81 +430,53 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
         message("[5] Running dNdScv...")
 
         # Covariates
-        # test = genemuts[order(RefCDS$gene_name), ]
         if (is.null(cv)) {
             nbrdf = genemuts[,c("n_syn","exp_syn")]
             model = MASS::glm.nb(n_syn ~ offset(log(exp_syn)) - 1 , data = nbrdf)
             message(sprintf("    Regression model for substitutions: no covariates were used (theta = %0.3g).", model$theta))
-
         } else {
-            covs = covs[genemuts$gene_name,]
+            #covs = as.matrix(covs[genemuts$gene_name,])
             if (ncol(covs) > maxcovs) {
                 warning(sprintf("More than %s input covariates. Only the first %s will be considered.", maxcovs, maxcovs))
                 covs = covs[,1:maxcovs]
             }
-
-            covs$gene_name <- rownames(covs) # IMPORTANT
-
-            # cat(paste("length of covs: ", nrow(covs), "\n", sep=""))
-            # cat(paste("length of genemuts[,c(n_syn,exp_syn)]: ", nrow(genemuts[,c("n_syn","exp_syn")]), "\n", sep=""))
-            # print(head(covs[2182,]))
-            # print(head(genemuts[2182,c("n_syn","exp_syn")]))
-            # save(covs,    file = "covs.Rda")
-
+            
+            # *EDIT BEGINS*
             # nbrdf = cbind(genemuts[,c("n_syn","exp_syn")], covs)
+            covs$gene_name <- rownames(covs) # IMPORTANT            
             nbrdf = merge(x=genemuts[,c("gene_name","n_syn","exp_syn")], y=covs, by="gene_name")
-            row.names(nbrdf) <- nbrdf$gene_name # make the row names the gene names instead of 1 through 20091
+            row.names(nbrdf) <- nbrdf$gene_name # make the row names the gene names instead of numeric
             nbrdf = nbrdf[order(genemuts$gene_name),] # Put it in the original order as genemuts
             nbrdf = nbrdf[,2:ncol(nbrdf)] # Remove gene_name
+            # *EDIT ENDS*
 
             # Negative binomial regression for substitutions
-            if (nrow(genemuts)<500) { # If there are <500 genes, we run the regression without covariates
-                print("Fewer than 500 genemuts")
+            if (nrow(genemuts)<mingenecovs) { # If there are <500 genes, we run the regression without covariates
                 model = MASS::glm.nb(n_syn ~ offset(log(exp_syn)) - 1 , data = nbrdf)
             } else {
                 model = tryCatch({
                     MASS::glm.nb(n_syn ~ offset(log(exp_syn)) + . , data = nbrdf) # We try running the model with covariates
                 }, warning = function(w){
-                    print("warning")
                     MASS::glm.nb(n_syn ~ offset(log(exp_syn)) - 1 , data = nbrdf) # If there are warnings or errors we run the model without covariates
                 }, error = function(e){
-                    print("error")
                     MASS::glm.nb(n_syn ~ offset(log(exp_syn)) - 1 , data = nbrdf) # If there are warnings or errors we run the model without covariates
                 })
             }
             message(sprintf("    Regression model for substitutions (theta = %0.3g).", model$theta))
-            # save(nbrdf,    file = "nbrdf.Rda")
-            # save(model$y,    file = "model_y.Rda")
-            # print(nbrdf["C10orf10",])
         }
         if (all(model$y==genemuts$n_syn)) {
-            print("all(model$y==genemuts$n_syn)")
             genemuts$exp_syn_cv = model$fitted.values
+        # *EDIT BEGINS*
         } else {
-            print("all(model$y!=genemuts$n_syn)")
-            # print("fitted values")
-            # print(head(model$fitted.values))
-            # print("nbrdf$exp_syn_cv")
             nbrdf$exp_syn_cv = model$fitted.values
-            # print(head(nbrdf$exp_syn_cv))
-            # print("nbrdf$gene_name")
             nbrdf$gene_name <- rownames(nbrdf)
-            # print(head(nbrdf$gene_name))
-            # gene_name <- genemuts$gene_name
             genemuts <- merge(x=genemuts, y=nbrdf[,c("exp_syn_cv", "gene_name")], by="gene_name")
             gene_name_order = sapply(RefCDS, function(x) x$gene_name)
             genemuts <- genemuts[match(gene_name_order, genemuts$gene_name),]
-            row.names(genemuts) <- 1:20091
-            # genemuts <- genemuts[order(as.numeric(row.names(genemuts))),]
-
-            # print(RefCDS[[2182]])
-            # print(genemuts[2182,])
-            # print(genemuts[which(genemuts$gene_name == "C10orf10"),])
-            # print(gene_name_order[2182])
-            # print(gene_name_order[which(gene_name_order == "C10orf10")])
-            # genemuts$exp_syn_cv = model$fitted.values
+            row.names(genemuts) <- 1:nrow(genemuts)
         }
-
+        # *EDIT ENDS*
+        
         theta = model$theta
         nbreg = model
 
@@ -532,7 +493,6 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
         selfun_cv = function(j) {
             y = as.numeric(genemuts[j,-1])
             x = RefCDS[[j]]
-            # x = RefCDS[[match(genemuts[j,1], gene_name_order)]]
             exp_rel = y[5:8]/y[5]
             # Gamma
             shape = theta
@@ -566,208 +526,36 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             llall_unc = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis
 
             if (constrain_wnon_wspl == 0) {
+
                 p = 1-pchisq(2*(llall_unc-c(llmis,lltrunc,ll0)),df=c(1,2,3))
                 return(c(wfree,p))
 
             } else { # d2. Free selection model: free wmis, free wnon==wspl
-                if (wg == TRUE) {
-                    split_gene_i <- which(genemuts$gene_name == split_gene)
-                    split_gene_x <- RefCDS[[split_gene_i]]
-                    split_gene_y <- as.numeric(genemuts[split_gene_i,-1])
-                    split_gene_exp_rel <- split_gene_y[5:8] / split_gene_y[5]
-                    indneut = 1
-                    opt_t = mle_tcv(n_neutral=sum(split_gene_y[indneut]), exp_rel_neutral=sum(split_gene_exp_rel[indneut]), shape=shape, scale=scale)
-                    split_gene_mrfold = max(1e-10, opt_t/sum(split_gene_y[5])) # Correction factor of "t" based on the obs/exp ratio of "neutral" mutations under the model
-
-                    # Global dN/dS across cancer genes, excluding current gene
-                    wg_mis_obs <- sum_n_mis   - y[2] - split_gene_y[2]                                          # sum of all missense mutations, except mutations in the current gene and the split gene
-                    wg_non_obs <- sum_n_non   - sum(y[3:4]) - sum(split_gene_y[3:4])                            # sum of all nonsense mutations, except mutations in the current gene and the split gene
-                    wg_mis_exp <- sum_exp_mis - y[6]       * mrfold - split_gene_y[6]       * split_gene_mrfold # sum of exp missense mutations, except mutations in the current gene and the split gene
-                    wg_non_exp <- sum_exp_non - sum(y[7:8])* mrfold - sum(split_gene_y[7:8])* split_gene_mrfold # sum of exp nonsense mutations, except mutations in the current gene and the split gene
-                    wg_mis <- wg_mis_obs / wg_mis_exp
-                    wg_non <- wg_non_obs / wg_non_exp
-                } else {
-                    wg_mis = 0
-                    wg_non = 0
-                }
 
                 wmisfree = y[2]/y[6]/mrfold; wmisfree[y[2]==0] = 0
                 wtruncfree = sum(y[3:4])/sum(y[7:8])/mrfold; wtruncfree[sum(y[3:4])==0] = 0
                 llall = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree,wtruncfree,wtruncfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis, free wnon==wspl
                 p = 1-pchisq(2*c(llall_unc-llmis,llall-c(lltrunc,ll0)),df=c(1,1,2))
-
-                if (ex == TRUE) {
-                    wmisfree_1 <- wmisfree
-                    excess_mis <- (y[2]        - (y[6]       * mrfold)) / num_patients
-                    excess_non <- (sum(y[3:4]) - (sum(y[7:8])* mrfold)) / num_patients
-                    # wmisfree   <- 1 / (1 - ((excess_mis * num_patients) / y[2]))
-                    wmisfree   <- 1 + ((excess_mis * num_patients) / (y[6] * mrfold))
-                    wmisfree   <- ifelse(y[2] > 0, wmisfree, 0)
-                    # wtruncfree <- 1 / (1 - ((excess_non * num_patients) / sum(y[3:4])))
-                    wtruncfree <- 1 + ((excess_non * num_patients) / (sum(y[7:8]) * mrfold))
-                    wtruncfree <- ifelse(sum(y[3:4]) > 0, wtruncfree, 0)
-
-                    llall = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree,wtruncfree,wtruncfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis, free wnon==wspl
-                }
-
-                # # *EDIT*
-                # if ( genemuts[j,1] == "C10orf10") {
-                #     cat("j", j, "\n")
-                #     cat("sum", sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree,wtruncfree,wtruncfree),dim=c(4,numrates))), log=T)), "\n")
-                #     cat("dgamma", dgamma(opt_t, shape=shape, scale=scale, log=T), "\n")
-                #     print("x")
-                #     print(x$N[66,])
-                #     print("y")
-                #     print(y)
-                #     # print("lambda")
-                #     # print(x$L*mutrates*mrfold*t(array(c(1,wmisfree,wtruncfree,wtruncfree),dim=c(4,numrates))))
-                #     cat("opt_t", opt_t, "\n")
-                #     cat("shape", shape, "\n")
-                #     cat('scale', scale, "\n")
-                #     cat('wg_mis', wg_mis, "\n")
-                #     cat('wg_mis_obs', wg_mis_obs, "\n")
-                #     cat('wg_mis_exp', wg_mis_exp, "\n")
-                    # cat('sum_n_mis', sum_n_mis, "\n")
-                    # if (ex == TRUE) {
-                    #     print(wmisfree_1)
-                    #     print(wmisfree)
-                    # }
-                #     cat('sum_exp_mis', sum_exp_mis, "\n")
-                #     cat('y[2]', y[2], '\n')
-                # }
-                return(c(wg_mis, wg_non, wmisfree,wtruncfree,wtruncfree,p,llmis,lltrunc,llall))
+                
+                # *EDIT BEGINS*             
+                return(c(wmisfree,wtruncfree,wtruncfree,p,llmis,lltrunc,llall))
+                # *EDIT ENDS*
             }
         }
 
-        calculate_mrfold = function(j) {
-            # Input:  row number for genemuts
-            # Output: mrfold
-            y = as.numeric(genemuts[j,-1])
-            exp_rel = y[5:8]/y[5]
-            shape = theta
-            scale = y[9]/theta
-
-            indneut = 1
-            opt_t = mle_tcv(n_neutral=sum(y[indneut]), exp_rel_neutral=sum(exp_rel[indneut]), shape=shape, scale=scale)
-            mrfold = max(1e-10, opt_t/sum(y[5]))
-
-            return(mrfold)
-        }
-
-        # Subfunction: dNdScv per gene
-        my_selfun_cv = function(j) {
-            y = as.numeric(genemuts[j,-1])
-            x = RefCDS[[j]]
-            exp_rel = y[5:8]/y[5]
-            # Gamma
-            shape = theta
-            scale = y[9]/theta
-
-            # *EDIT*
-            # if (j == 1 || j == 100) { print("X and Y info:"); print("j"); print(j); print("x$N"); print(x); print("x$L"); print(x); print(y); }
-            xA = RefCDSA[[j]]
-            yA = as.numeric(genemuts[j,-1]) * ( num_A / (num_A + num_B) ) # multiplied by the fraction of samples in group A
-            yA[1:4] = colSums( xA$N[,1:4] )
-
-            xB = RefCDSB[[j]]
-            yB = as.numeric(genemuts[j,-1]) * ( num_B / (num_A + num_B) ) # multiplied by the fraction of samples in group B
-            yB[1:4] = colSums( xB$N[,1:4] )
-
-            # a. Neutral model
-            indneut = 1:4 # vector of neutral mutation types under this model (1=synonymous, 2=missense, 3=nonsense, 4=essential_splice)
-            opt_t = mle_tcv(n_neutral=sum(y[indneut]), exp_rel_neutral=sum(exp_rel[indneut]), shape=shape, scale=scale)
-            mrfold = max(1e-10, opt_t/y[5]) # Correction factor of "t" based on the obs/exp ratio of "neutral" mutations under the model
-            ll0 = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,1,1,1),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik null model
-
-            # b. Missense model: wmis==1, free wnon, free wspl
-            indneut = 1:2
-            opt_t = mle_tcv(n_neutral=sum(y[indneut]), exp_rel_neutral=sum(exp_rel[indneut]), shape=shape, scale=scale)
-            mrfold = max(1e-10, opt_t/sum(y[5])) # Correction factor of "t" based on the obs/exp ratio of "neutral" mutations under the model
-            wfree = y[3:4]/y[7:8]/mrfold; wfree[y[3:4]==0] = 0
-            llmis = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,1,wfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis
-
-            # c. Truncating muts model: free wmis, wnon==wspl==1
-            indneut = c(1,3,4)
-            opt_t = mle_tcv(n_neutral=sum(y[indneut]), exp_rel_neutral=sum(exp_rel[indneut]), shape=shape, scale=scale)
-            mrfold = max(1e-10, opt_t/sum(y[5])) # Correction factor of "t" based on the obs/exp ratio of "neutral" mutations under the model
-            wfree = y[2]/y[6]/mrfold; wfree[y[2]==0] = 0
-            lltrunc = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wfree,1,1),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis
-
-            # d. Free selection model: free wmis, free wnon, free wspl
-            indneut = 1
-            opt_t = mle_tcv(n_neutral=sum(y[indneut]), exp_rel_neutral=sum(exp_rel[indneut]), shape=shape, scale=scale)
-            mrfold = max(1e-10, opt_t/sum(y[5])) # Correction factor of "t" based on the obs/exp ratio of "neutral" mutations under the model
-            wfree = y[2:4]/y[6:8]/mrfold; wfree[y[2:4]==0] = 0
-            llall_unc = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis
-
-            if (constrain_wnon_wspl == 0) {
-                p = 1-pchisq(2*(llall_unc-c(llmis,lltrunc,ll0)),df=c(1,2,3))
-                return(c(wfree,p))
-
-            } else { # d2. Free selection model: free wmis, free wnon==wspl
-                # *EDIT*
-                wmisfree     = y[2]/y[6]/mrfold; wmisfree[y[2]==0] = 0
-                wtruncfree   = sum(y[3:4])/sum(y[7:8])/mrfold; wtruncfree[sum(y[3:4])==0] = 0
-                wmisfree_A   = yA[2]/yA[6]/mrfold; wmisfree_A[yA[2]==0] = 0
-                wtruncfree_A = sum(yA[3:4])/sum(yA[7:8])/mrfold; wtruncfree_A[sum(yA[3:4])==0] = 0
-                wmisfree_B   = yB[2]/yB[6]/mrfold; wmisfree_B[yB[2]==0] = 0
-                wtruncfree_B = sum(yB[3:4])/sum(yB[7:8])/mrfold; wtruncfree_B[sum(yB[3:4])==0] = 0
-                llall   = sum(dpois(x=x$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree,wtruncfree,wtruncfree),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis, free wnon==wspl
-                llallAB = sum(dpois(x=xA$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree_A,wtruncfree_A,wtruncfree_A),dim=c(4,numrates))), log=T)) + sum(dpois(x=xB$N, lambda=x$L*mutrates*mrfold*t(array(c(1,wmisfree_B,wtruncfree_B,wtruncfree_B),dim=c(4,numrates))), log=T)) + dgamma(opt_t, shape=shape, scale=scale, log=T) # loglik free wmis, free wnon==wspl
-                #p = 1-pchisq(2*c(llall_unc-llmis,llall-c(lltrunc,ll0)),df=c(1,1,2))
-                p = 1-pchisq( 2 * (llallAB - llall),df=2)
-                return(c(wmisfree,wtruncfree,wtruncfree, wmisfree_A, wmisfree_B, wtruncfree_A, wtruncfree_B,llmis, lltrunc, llall,llallAB,p))
-            }
-        }
-
-        # *EDIT*
-        if (compare == TRUE) {
-            print("using my_selfun_cv")
-            num_A = nrow(mutations[ which(mutations[,6] == "A"), ])
-            num_B = nrow(mutations[ which(mutations[,6] == "B"), ])
-            sel_cv = as.data.frame(t(sapply(1:nrow(genemuts), my_selfun_cv)))
-            colnames(sel_cv) = c("wmis_cv","wnon_cv","wspl_cv", "wmisfree_A", "wmisfree_B", "wtruncfree_A", "wtruncfree_B", "llmis", "lltrunc", "llall","llallAB","p")
-            sel_cv$q = p.adjust(sel_cv$p, method="BH")
-            sel_cv = cbind(genemuts[,1:5],sel_cv)
-            sel_cv = sel_cv[order(sel_cv$p, -sel_cv$wmis_cv),] # Sorting genes in the output file
-        } else {
-            # print("NOT using my_selfunc_cv")
-            # cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
-            # if (wg == TRUE) {
-            #     cancer_genes <- scan("~/scratch/dnds/data/369_plus_cancer_type_significant.txt", character()) # read in cancer_genes
-            #     print("Calculating Sums")
-            #     sum_n_mis   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),3])
-            #     sum_n_non   <<- sum(genemuts[which(genemuts$gene_name %in% cancer_genes),4]) + sum(genemuts[which(genemuts$gene_name %in% cancer_genes),5])
-            #     print("ok")
-            #     print("Calculating mrfolds")
-            #     all_mrfolds <<- as.vector(t(sapply(1:nrow(genemuts[which(genemuts$gene_name %in% cancer_genes),]), calculate_mrfold)))
-            #     prods_mis   <<- genemuts[which(genemuts$gene_name %in% cancer_genes),7] * all_mrfolds
-            #     prods_non   <<- (genemuts[which(genemuts$gene_name %in% cancer_genes),8] + genemuts[which(genemuts$gene_name %in% cancer_genes),9]) * all_mrfolds
-            #     sum_exp_mis <<- sum(prods_mis)
-            #     sum_exp_non <<- sum(prods_non)
-            #     print("ok")
-            # }
-
-            if (ex == TRUE) {
-                print("Using excess method")
-                num_patients <- length(as.vector(unique(annot$sampleID)))
-            }
-
-            gene_name_order = sapply(RefCDS, function(x) x$gene_name)
-
-            sel_cv = as.data.frame(t(sapply(1:nrow(genemuts), selfun_cv)))
-            print("Finished sel_cv")
-            colnames(sel_cv) = c("wg_mis","wg_non","wmis_cv","wnon_cv","wspl_cv","pmis_cv","ptrunc_cv","pallsubs_cv","llmis","lltrunc","llall")
-            sel_cv$qmis_cv = p.adjust(sel_cv$pmis_cv, method="BH")
-            sel_cv$qtrunc_cv = p.adjust(sel_cv$ptrunc_cv, method="BH")
-            sel_cv$qallsubs_cv = p.adjust(sel_cv$pallsubs_cv, method="BH")
-            sel_cv = cbind(genemuts[,1:5],sel_cv)
-            sel_cv = sel_cv[order(sel_cv$pallsubs_cv, sel_cv$pmis_cv, sel_cv$ptrunc_cv, -sel_cv$wmis_cv),] # Sorting genes in the output file
-        }
-
+        sel_cv = as.data.frame(t(sapply(1:nrow(genemuts), selfun_cv)))
+        # *EDIT BEGINS*
+        colnames(sel_cv) = c("wmis_cv","wnon_cv","wspl_cv","pmis_cv","ptrunc_cv","pallsubs_cv","llmis","lltrunc","llall")
+        # *EDIT ENDS*
+        sel_cv$qmis_cv = p.adjust(sel_cv$pmis_cv, method="BH")
+        sel_cv$qtrunc_cv = p.adjust(sel_cv$ptrunc_cv, method="BH")
+        sel_cv$qallsubs_cv = p.adjust(sel_cv$pallsubs_cv, method="BH")
+        sel_cv = cbind(genemuts[,1:5],sel_cv)
+        sel_cv = sel_cv[order(sel_cv$pallsubs_cv, sel_cv$pmis_cv, sel_cv$ptrunc_cv, -sel_cv$wmis_cv),] # Sorting genes in the output file
 
         ## Indel recurrence: based on a negative binomial regression (ideally fitted excluding major known driver genes)
 
+        geneindels = NULL # Initialising
         if (nrow(indels) >= min_indels) {
 
             geneindels = as.data.frame(array(0,dim=c(length(RefCDS),8)))
@@ -800,34 +588,28 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             geneindels$exp_unif = sum(geneindels[!geneindels$excl,"n_indused"]) / sum(geneindels[!geneindels$excl,"cds_length"]) * geneindels$cds_length
 
             # Negative binomial regression for indels
+
             if (is.null(cv)) {
-              print("Not using covariables for indels")
                 nbrdf = geneindels[,c("n_indused","exp_unif")][!geneindels[,6],] # We exclude known drivers from the fit
                 model = MASS::glm.nb(n_indused ~ offset(log(exp_unif)) - 1 , data = nbrdf)
                 nbrdf_all = geneindels[,c("n_indused","exp_unif")]
             } else {
-                covs = covs[,1:ncol(covs)-1]
+            
+                # *EDIT BEGINS*
                 #nbrdf = cbind(geneindels[,c("n_indused","exp_unif")], covs)[!geneindels[,6],] # We exclude known drivers from the fit
-				covs$gene_name <- rownames(covs) # IMPORTANT
-				geneindels<- geneindels[match(gene_name_order, geneindels$gene_name),]
-				covs <- covs[match(gene_name_order, covs$gene_name),]
-				#covs = covs[order(geneindels$gene_name),]
-				nbrdf = merge(x=geneindels[,c("gene_name","n_indused","exp_unif")], y=covs, by="gene_name")
-				nbrdf <- nbrdf[match(gene_name_order, nbrdf$gene_name),]
-				genes_to_remove <- geneindels$gene_name[geneindels$excl] # these are the genes that should be removed (ie those that should be excluded because they're drivers)
-				nbrdf <- nbrdf[which(! nbrdf$gene_name %in% genes_to_remove),] # remove the genes
-				row.names(nbrdf) <- nbrdf$gene_name # make the row names the gene names instead of 1 through 20091
-                # nbrdf = nbrdf[order(geneindels$gene_name),] # Put it in the original order as geneindels
+                gene_name_order = sapply(RefCDS, function(x) x$gene_name)
+                covs = covs[,1:ncol(covs)-1]
+                covs$gene_name <- rownames(covs) # IMPORTANT
+		geneindels<- geneindels[match(gene_name_order, geneindels$gene_name),]
+		covs <- covs[match(gene_name_order, covs$gene_name),]
+		nbrdf = merge(x=geneindels[,c("gene_name","n_indused","exp_unif")], y=covs, by="gene_name")
+		nbrdf <- nbrdf[match(gene_name_order, nbrdf$gene_name),]
+		genes_to_remove <- geneindels$gene_name[geneindels$excl] # these are the genes that should be removed (ie those that should be excluded because they're drivers)
+		nbrdf <- nbrdf[which(! nbrdf$gene_name %in% genes_to_remove),] # remove the genes
+		row.names(nbrdf) <- nbrdf$gene_name # make the row names the gene names instead of numeric
                 nbrdf <- nbrdf[,2:ncol(nbrdf)] # Remove gene_name
-                #print(head(nbrdf))
-                #print(geneindels[which(geneindels$gene_name == "C10orf10"),])
-                #print(gene_name_order[2182])
-                #print(covs[which(covs$gene_name == "C10orf10"),])
-                #print(gene_name_order[2182])
-                # save(nbrdf,    file = "nbrdf.Rda")
-                # save(covs,    file = "covs.Rda")
-                # save(geneindels,    file = "geneindels.Rda")
-
+                # *EDIT ENDS*
+                
                 if (sum(!geneindels$excl)<500) { # If there are <500 genes, we run the regression without covariates
                     model = MASS::glm.nb(n_indused ~ offset(log(exp_unif)) - 1 , data = nbrdf)
                 } else {
@@ -854,15 +636,14 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
             geneindels$qind = p.adjust(geneindels$pind, method="BH")
 
             # Fisher combined p-values (substitutions and indels)
-            # *EDIT*
-            if (compare == FALSE) {
-                sel_cv = merge(sel_cv, geneindels, by="gene_name")[,c("gene_name","n_syn","n_mis","n_non","n_spl","n_indused", "exp_indcv", "wg_mis","wg_non","wmis_cv","wnon_cv","wspl_cv","wind","pmis_cv","ptrunc_cv","pallsubs_cv","pind","llmis", "lltrunc", "llall","qmis_cv","qtrunc_cv","qallsubs_cv","qind")]
-                colnames(sel_cv) = c("gene_name","n_syn","n_mis","n_non","n_spl","n_ind", "exp_ind", "wg_mis","wg_non","wmis_cv","wnon_cv","wspl_cv","wind_cv","pmis_cv","ptrunc_cv","pallsubs_cv","pind_cv","llmis", "lltrunc", "llall","qmis_cv","qtrunc_cv","qallsubs_cv","qind_cv")
-                sel_cv$pglobal_cv = 1 - pchisq(-2 * (log(sel_cv$pallsubs_cv) + log(sel_cv$pind_cv)), df = 4)
-                sel_cv$qglobal_cv = p.adjust(sel_cv$pglobal_cv, method="BH")
+            # *EDIT BEGINS*
+            sel_cv = merge(sel_cv, geneindels, by="gene_name")[,c("gene_name","n_syn","n_mis","n_non","n_spl","n_indused", "exp_indcv", "wmis_cv","wnon_cv","wspl_cv","wind","pmis_cv","ptrunc_cv","pallsubs_cv","pind","llmis", "lltrunc", "llall","qmis_cv","qtrunc_cv","qallsubs_cv","qind")]
+            colnames(sel_cv) = c("gene_name","n_syn","n_mis","n_non","n_spl","n_ind", "exp_ind", "wmis_cv","wnon_cv","wspl_cv","wind_cv","pmis_cv","ptrunc_cv","pallsubs_cv","pind_cv","llmis", "lltrunc", "llall","qmis_cv","qtrunc_cv","qallsubs_cv","qind_cv")
+            # *EDIT ENDS*
+            sel_cv$pglobal_cv = 1 - pchisq(-2 * (log(sel_cv$pallsubs_cv) + log(sel_cv$pind_cv)), df = 4)
+            sel_cv$qglobal_cv = p.adjust(sel_cv$pglobal, method="BH")
 
-                sel_cv = sel_cv[order(sel_cv$pglobal_cv, sel_cv$pallsubs_cv, sel_cv$pmis_cv, sel_cv$ptrunc_cv, -sel_cv$wmis_cv),] # Sorting genes in the output file
-            }
+            sel_cv = sel_cv[order(sel_cv$pglobal_cv, sel_cv$pallsubs_cv, sel_cv$pmis_cv, sel_cv$ptrunc_cv, -sel_cv$wmis_cv),] # Sorting genes in the output file
         }
     }
 
@@ -870,25 +651,23 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
         wrong_refbase = NULL # Output value if there were no wrong bases
     }
 
-    # *EDIT*
-    if (compare == FALSE) {
-        annot = annot[,setdiff(colnames(annot),c("start","end","geneind"))]
-    }
-
-    # *EDIT*
-    # save(genemuts, file = "genemuts.Rda")
+    annot = annot[,setdiff(colnames(annot),c("start","end","geneind"))]
+    
+    # *EDIT BEGINS*
+    
     if (outmats) {
         if (outmutrates) {
-            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, RefCDS = RefCDS, N = Nall, L = Lall, mutrates = mutrates)
+            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, geneindels = geneindels, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, RefCDS = RefCDS, N = Nall, L = Lall, mutrates = mutrates)
         } else {
-            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, RefCDS = RefCDS, N = Nall, L = Lall)
+            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, geneindels = geneindels, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, RefCDS = RefCDS, N = Nall, L = Lall)
         }
     } else {
         if (outmutrates) {
-            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, mutrates)
+            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, geneindels = geneindels, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase, mutrates)
         } else {
-            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase)
+            dndscvout = list(globaldnds = globaldnds, sel_cv = sel_cv, sel_loc = sel_loc, annotmuts = annot, genemuts = genemuts, geneindels = geneindels, mle_submodel = mle_submodel, exclsamples = exclsamples, exclmuts = exclmuts, nbreg = nbreg, nbregind = nbregind, poissmodel = poissmodel, wrongmuts = wrong_refbase)
         }
     }
-
+    # *EDIT ENDS*
+    
 } # EOF
