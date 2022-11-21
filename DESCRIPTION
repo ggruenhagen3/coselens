@@ -13,6 +13,7 @@ Description: Tests for significant differences in selection between two groups o
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
+biocViews:
 Imports:
   seqinr,
   MASS,
