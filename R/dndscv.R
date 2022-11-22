@@ -94,7 +94,9 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
     # [Input] Covariates (The user can input a custom set of covariates as path to a .rds file or a data frame)
     # *EDIT BEGINS*
     cv_class = class(cv)
-    if ("character" %in% cv_class) {
+    if (is.null(cv)) {
+        covs = cv
+    } else if ("character" %in% cv_class) {
         if (cv == "hg19") {
             data(list=sprintf("dndscv_data_covariates_%s",cv), package="coselens")        
         } else {
@@ -104,8 +106,13 @@ dndscv = function(mutations, gene_list = NULL, refdb = "hg19", sm = "192r_3w", k
         # use the user-supplied covariance matrix
         covs = cv
     } else {
-        stop("Expected covariance input to be \"hg19\", a file path (.rds), or a matrix.")
+        stop("Expected covariance input to be \"hg19\", a file path (.rds), or a dataframe.")
     }
+    if (!is.null(cv)) {  # Check compatibility of covariates with RefCDS
+        if (!all(sapply(RefCDS, function(x) x$gene_name) == row.names(covs))) {
+            stop("Row names in the covariates matrix do not coincide with the gene names in the reference database. Please, provide a compatible covariates matrix or run dNdScv with the option cv=NULL.") 
+        }
+    }   
     # *EDIT ENDS*
 
     # [Input] Known cancer genes (The user can input a gene list as a character vector)
