@@ -31,62 +31,18 @@ The input parameters group1 and group2 are two dataframes of mutations, one for 
 By default, coselens assumes that the mutation data is mapped to the GRCh37/hg19 assembly of the human reference genome. To use coselens with different species or assemblies, an alternative reference database (RefCDS object) must be provided with the option refdb. The generation of alternative reference databases can be done using the dndscv package and is explained in [this tutorial](http://htmlpreview.github.io/?http://github.com/im3sanger/dndscv/blob/master/vignettes/buildref.html):
 
 # Output
-Coselens returns a list of 4 dataframes. The first is probably the most pertinent to the majority of users, it contains information on effect sizes and p-values for differential selection of genes between the input groups. If a list of genes is provided through the subset.genes.by option, the results and Benjamini-Hochberg corrections are restricted to those genes. Detailed descriptions of each of the 4 dataframes are below.
+Coselens returns several tables with effect sizes and p-values for differential selection in each gene of the reference genome. Coselens returns a list of 6 dataframes named substitutions, indels, missense_sub, truncating_sub, overall_mut and dndscv. The dataframes contain information on differential selection from different types of mutations. Coselens also returns the results of a joint analysis of single-nucleotide substitutions and indels in the table ```coselens_out$overall_mut```. The last element of the list is another list containing two dataframes which are the output of dndscv for group1 and group2.
 
-* summary: a summary of coselens output that should be sufficient for most users
-  <details>
-  <summary>More Details</summary>
-  <br>
- 
-  * Output Column Descriptions
-    * gene_name: name of gene that conditional selection was calculated in
-    * num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
-    * num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
-    * num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
-    * num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
-    * psub: p-value for conditional selection in non-synonymous substitutions
-    * pind: p-value for conditional selection in indels
-    * pglobal: Fisher's combined p-value for psub and pind
-    * qsub: q-value of psub using Benjamini-Hochberg correction
-    * qind: q-value of pind using Benjamini-Hochberg correction
-    * qglobal: q-value of pglobal using Benjamini-Hochberg correction
-  </details>
-
-* full: similar to summary, but with more columns
-  <details>
-  <summary>More Details</summary>
-  <br>
-
-  * Output Column Descriptions (same as summary w/ the following additions):
-    * num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
-    * num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
-    * num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
-    * num.driver.trunc.group2: estimate of the number of drivers in group 2 based excess of truncating mutations
-    * pmis: p-value for conditional selection in missense mutations
-    * ptrunc: p-value for conditional selection in truncating mutations
-    * psub.group1: p-value for selection in group 1 for non-synonymous substitutions
-    * psub.group2: p-value for selection in group 2 for non-synonymous substitutions
-    * pmis.group1: p-value for selection in group 1 for missense substitutions
-    * pmis.group2: p-value for selection in group 2 for missense substitutions
-    * ptrunc.group1: p-value for selection in group 1 for truncating substitutions
-    * ptrunc.group2: p-value for selection in group 2 for truncating substitutions
-    * pind.group1: p-value for selection in group 1 for indels
-    * pind.group2: p-value for selection in group 2 for indels
-    * qsub.group1: q-value of psub.group1 using Benjamini-Hochberg correction
-    * qsub.group2: q-value of psub.group2 using Benjamini-Hochberg correction
-    * qmis.group1: q-value of pmis.group1 using Benjamini-Hochberg correction
-    * qmis.group2: q-value of pmis.group2 using Benjamini-Hochberg correction
-    * qtrunc.group1: q-value of ptrunc.group1 using Benjamini-Hochberg correction
-    * qtrunc.group2: q-value of ptrunc.group2 using Benjamini-Hochberg correction
-    * qind.group1: q-value of pind.group1 using Benjamini-Hochberg correction
-    * qind.group2: q-value of pind.group2 using Benjamini-Hochberg correction
-  </details>
-
-* mle_submodel_group1: fitted substitution models for group 1 from dndscv
-* mle_submodel_group2: fitted substitution models for group 2 from dndscv
-
-Note that the Fisher’s combined value of pglobal/qglobal may be too conservative if the sensitivity of the pall or pind test is low. In our experience with cancer somatic mutation data, the indel test (pind) only reaches acceptable sensitivity levels if the sample size is large (>100) and indels are frequent. Otherwise, the low sensitivity of the indel test results in non-significant values of pglobal, despite the presence of substantial differential selection on substitutions. Thus, we recommend using pall/qall to assess significance of differential selection on substitutions, while restricting pglobal/qglobal to datasets with large sample sizes and genes in which indels are the main subject of selection.
-
+Column Description of dataframes 1-4 in the output of coselens: 
+* Output Column Descriptions
+  * gene_name: name of gene that conditional selection was calculated in
+  * num.driver.group1: estimate of the number of drivers per sample per gene in group 1
+  * num.driver.group2: estimate of the number of drivers per sample per gene in group 2
+  * Delta.Nd: absolute difference in the average number of driver mutations per sample (group 1 minus group 2) <details><summary>Details</summary>A major feature of Coselens is that it provides the user with biologically meaningful effect sizes for the magnitude of conditional selection. The most straightforward way to quantify effect sizes is by calculating the difference in the average number of driver mutations in the presence and absence of the condition of interest. We call that measure of effect size ΔNd (column 4, Delta.Nd). The value of ΔNd indicates, in absolute terms, how the grouping variable modifies the average number of driver mutations in a gene.</details>
+  * classification: qualitative classification of the association between the grouping variable and the magnitude and sign of selection <details><summary>Details</summary>)Provides a qualitative classification of the association between the grouping variable (the condition of interest) and the magnitude and sign of selection. Independence implies that the grouping variable does not affect selection for drivers; strict dependence implies that drivers are only positively selected in the first group of samples, in which the condition of interest is met; strict inhibition implies that positive selection only acts in the second group, in which the condition is not met. Strict dependence and strict inhibition are the two extremes of conditionality, that is, cases of full conditionality. Instances of partial conditionality are labeled as facilitation and inhibition, respectively. Together with independence, these four classes cover the whole spectrum of dependencies for positively selected driver mutations. If negative (purifying) selection is dominant, other classes of dependency become possible: strict dependence with sign change, if the sign of selection changes from negative to positive when the condition is met; strict inhibition with sign change, if the sign of selection changes from positive to negative when the condition is met; aggravation, if purifying selection against mutations becomes stronger when the condition is met; and relaxation, if selection against mutations becomes weaker when the condition is met. </details>
+  * dependency: the association between the grouping variable and the average number of drivers observed in a gene<details><summary>Details</summary>A quantitative measure of these associations (read details of classification), which takes values between 0/NA (no conditionality) and 1 (full conditionality).</details>
+  * pval: p-value for conditional selection
+  * qval: q-value for conditional selection using Benjamini-Hochberg correction of false discovery rate
 # Example
 Coselens was developed to discover epistatic interactions between cancer genes in specific cancer types. To do that, we searched for differential selection in cancer genes when mutations in another cancer gene were present/absent. As an example, we took a somatic mutation dataset built from biopsies from patients with colorectal cancer (COAD) and split them into two groups, those with mutations in APC and those without mutations in APC. Let's begin, by loading these two mutation datasets.
 
@@ -103,16 +59,16 @@ Next, let's detect differential selection in genes with APC in COAD (runtime ~5.
 coselens_res = coselens(group1, group2, subset.genes.by = cancer_genes)
 ```
 
-Use ```head(coselens_res$summary)```, the output should look like this:
+Use ```head(coselens_res[["overall_mut"]])```, the output should look like this:
 
-| gene_name | num.driver.sub.group1 | num.driver.sub.group2 | num.driver.ind.group1 | num.driver.ind.group2 | psub | pind | pglobal | qsub | qind | qglobal |
-|-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|--------|--------|
-|ABL1|-8.257161e-05|0.021727512 |-0.0018375172|0.0007703715 |0.4441491|0.5359755|0.5797215|1|1|1|
-|ACO1|-1.254983e-03|-0.004122997|0.0061894558 |-0.0053114291|0.9125477|0.2687322|0.5899164|1|1|1|
-|ACVR1|3.590744e-04|0.008633316 |-0.0008275762|-0.0032018083|0.7083432|1.0000000|0.9525987|1|1|1|
-|ACVR1B|3.921533e-02|0.039206586|-0.0008321666|0.0039877767 |0.9904685|0.3391245|0.7023388|1|1|1|
-|ACVR2A|1.293825e-02|0.018095464|0.0119255807 |0.0107532703 |0.6835661|1.0000000|0.9436165|1|1|1|
-|ACVR2B|8.398367e-03|0.028399806|-0.0006982841|-0.0027780460|0.2041043|1.0000000|0.5284514|1|1|1|
+| gene_name | num.driver.group1 | num.driver.group2 | Delta.Nd | classification | dependency | pval | qval |
+|-----------|-------------------|-------------------|----------|----------------|------------|------|------|
+|ABL1|-0.0019200888|0.022497687|-0.024417775|independence|NA|0.5135217|1|
+|ACO1|0.0049344727|-0.009434191|0.014368663|independence|NA|0.2589758|1|
+|ACVR1|-0.0004685018|0.005431772|-0.005900274|independence|NA|0.9525934|1|
+|ACVR1B|0.0383831658|0.043194501|-0.004811335|independence|NA|0.6044401|1|
+|ACVR2A|0.0248638286|0.028849193|-0.003985365|independence|NA|0.9260953|1|
+|ACVR2B|0.0077000832|0.025621900|-0.017921817|independence|NA|0.3617251|1|
 
 Let's find the genes subject to significant significant differential selection by doing the following:
 
@@ -121,9 +77,9 @@ head(coselens_res$summary[which(coselens_res$summary$qglobal < 0.05),])
 ```
 
 The output should look like this:
-| gene_name | num.driver.sub.group1 | num.driver.sub.group2 | num.driver.ind.group1 | num.driver.ind.group2 | psub | pind | pglobal | qsub | qind | qglobal |
-|-----------|--------------------|--------------------|------|--------|------|-----|---------|---------|--------|--------|
-|APC|0.98535779 |-0.04327314|0.421980339 |-0.01550676|1.661006e-08|0.2386762|8.065981e-08|7.308425e-06|1|3.532899e-05|
-|BRAF|0.03621197|0.22591651 |-0.001109252| 0.00270349|6.747822e-08|0.4244034|5.260378e-07|1.484521e-05|1|1.152023e-04|
+| gene_name | num.driver.group1 | num.driver.group2 | Delta.Nd | classification | dependency | pval | qval |
+|-----------|-------------------|-------------------|----------|----------------|------------|------|------|
+|APC|1.40733813|-0.05877917|1.4661173|strict|dependence|1.0000000|0.000000e+00|0.000000e+00|
+|BRAF|0.03510272|0.22862023|-0.1935175|strict|inhibition|0.8060196|4.175434e-07|9.206832e-05|
 
 We detected 2 significant genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution. The q-value of BRAF is really low this provides strong evidence of conditional selection between APC and BRAF in COAD. Now that you see how the tool works, feel free to think outside the box and make discoveries of your own!
