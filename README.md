@@ -57,9 +57,10 @@ Next, let's detect differential selection in genes with APC in COAD (runtime ~5.
 
 ```
 coselens_res = coselens(group1, group2, subset.genes.by = cancer_genes)
+overall_mut = coselens_res[["overall_mut"]]
 ```
 
-Use ```head(coselens_res[["overall_mut"]])```, the output should look like this:
+Use ```head(overall_mut)```, the output should look like this:
 
 | gene_name | num.driver.group1 | num.driver.group2 | Delta.Nd | classification | dependency | pval | qval |
 |-----------|-------------------|-------------------|----------|----------------|------------|------|------|
@@ -73,7 +74,7 @@ Use ```head(coselens_res[["overall_mut"]])```, the output should look like this:
 Let's find the genes subject to significant significant differential selection by doing the following:
 
 ```
-head(coselens_res$summary[which(coselens_res$summary$qglobal < 0.05),])
+head(overall_mut[which(overall_mut$qval < 0.05),])
 ```
 
 The output should look like this:
