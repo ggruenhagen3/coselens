@@ -57,30 +57,34 @@ Next, let's detect differential selection in genes with APC in COAD (runtime ~5.
 
 ```
 coselens_res = coselens(group1, group2, subset.genes.by = cancer_genes)
-overall_mut = coselens_res[["overall_mut"]]
+coselens_res_sub = coselens_res[["substitutions"]]
 ```
 
-Use ```head(overall_mut)```, the output should look like this:
+Use ```head(coselens_res_sub)```, the output should look like this:
 
 | gene_name | num.driver.group1 | num.driver.group2 | Delta.Nd | classification | dependency | pval | qval |
 |-----------|-------------------|-------------------|----------|----------------|------------|------|------|
-|ABL1|-0.0019200888|0.022497687|-0.024417775|independence|NA|0.5135217|1|
-|ACO1|0.0049344727|-0.009434191|0.014368663|independence|NA|0.2589758|1|
-|ACVR1|-0.0004685018|0.005431772|-0.005900274|independence|NA|0.9525934|1|
-|ACVR1B|0.0383831658|0.043194501|-0.004811335|independence|NA|0.6044401|1|
-|ACVR2A|0.0248638286|0.028849193|-0.003985365|independence|NA|0.9260953|1|
-|ACVR2B|0.0077000832|0.025621900|-0.017921817|independence|NA|0.3617251|1|
+|ABL1|-8.257161e-05|0.021727315|-2.180989e-02|independence|NA|0.4441554|0.9641846|
+|ACO1|-1.254983e-03|-0.004122761|2.867778e-03|independence|NA|0.6332841|1.0000000|
+|ACVR1|3.590744e-04|0.008633581|-8.274506e-03|independence|NA|0.7083277|1.0000000|
+|ACVR1B|3.921533e-02|0.039206724|8.608222e-06|independence|NA|0.9904680|1.0000000|
+|ACVR2A|1.293825e-02|0.018095923|-5.157675e-03|independence|NA|0.6835451|1.0000000|
+|ACVR2B|8.398367e-03|0.028399946|-2.000158e-02|independence|NA|0.1140772|0.9032615|
 
 Let's find the genes subject to significant significant differential selection by doing the following:
 
 ```
-head(overall_mut[which(overall_mut$qval < 0.05),])
+head(coselens_res_sub[which(coselens_res_sub$qval < 0.05),])
 ```
 
 The output should look like this:
 | gene_name | num.driver.group1 | num.driver.group2 | Delta.Nd | classification | dependency | pval | qval |
 |-----------|-------------------|-------------------|----------|----------------|------------|------|------|
-|APC|1.40733813|-0.05877917|1.4661173|strict|dependence|1.0000000|0.000000e+00|0.000000e+00|
-|BRAF|0.03510272|0.22862023|-0.1935175|strict|inhibition|0.8060196|4.175434e-07|9.206832e-05|
+|AMER1|0.0760727665|0.01712638|0.05894639|strict|dependence|0.7180543|7.967449e-04|3.904050e-02|
+|APC|0.9853577889|-0.04327241|1.02863020|strict|dependence|1.0000000|4.503504e-55|1.986045e-52|
+|BRAF|0.0362119728|0.22591674|-0.18970477|strict|inhibition|0.7976351|6.747502e-08|1.487824e-05|
+|FLG2|-0.0346469414|0.03247612|-0.06712306|strict|inhibition|1.0000000|6.732236e-04|3.711145e-02|
+|HLA-C|0.0001192703|0.07067271|-0.07055344|strict|inhibition|0.9978512|3.534180e-05|5.195245e-03|
+|KRAS|0.4755624949|0.24371113|0.23185136|facilitation|0.3970280|5.551261e-04|3.497295e-02|
 
-We detected 2 significant genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution. The q-value of BRAF is really low this provides strong evidence of conditional selection between APC and BRAF in COAD. Now that you see how the tool works, feel free to think outside the box and make discoveries of your own!
+This shows some of the significant genes, but APC was the gene used to separate individuals in the beginning, so it's expected that it should be significant. We can remove APC because it is the trivial solution. The interpretation of genes with significant q-values, such as AMER1 is that there's evidence of conditional selection between APC and AMER1 in COAD. Now that you see how the tool works, feel free to think outside the box and make discoveries of your own!
