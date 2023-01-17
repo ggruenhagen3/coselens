@@ -20,11 +20,8 @@ dndscv(
   outp = 3,
   numcode = 1,
   outmats = F,
-  compare = F,
   outmutrates = F,
-  wg = F,
-  ex = F,
-  split_gene = ""
+  mingenecovs = 500
 )
 }
 \arguments{
@@ -32,7 +29,7 @@ dndscv(
 
 \item{gene_list}{List of genes to restrict the analysis (use for targeted sequencing studies)}
 
-\item{refdb}{Reference database (path to .rda file)}
+\item{refdb}{Reference database (path to .rda file or a pre-loaded array object in the right format)}
 
 \item{sm}{Substitution model (precomputed models are available in the data directory)}
 
@@ -58,15 +55,9 @@ dndscv(
 
 \item{outmats}{Output the internal N and L matrices (default = F)}
 
-\item{compare}{Compare dN/dS for two groups (default = F)}
+\item{outmutrates}{Output the internal mutation rates (default = F)}
 
-\item{outmutrates}{Output internal mutation rates (default = F)}
-
-\item{wg}{Control for global dN/dS (default = F)}
-
-\item{ex}{Compare excess of nonsynonymous mutations (default = F)}
-
-\item{split_gene}{The gene the patients are split by (default = "")}
+\item{mingenecovs}{Minimum number of genes required to run the negative binomial regression model with covariates (default = 500)}
 }
 \value{
 'dndscv' returns a list of objects:
@@ -89,6 +80,10 @@ dndscv(
 
 \itemize{
 \item genemuts: Observed and expected numbers of mutations per gene.
+}
+
+\itemize{
+\item geneindels: Observed and expected numbers of indels per gene.
 }
 
 \itemize{
@@ -120,7 +115,7 @@ dndscv(
 }
 }
 \description{
-Analyses of selection using the dNdScv and dNdSloc models. Default parameters typically increase the performance of the method on cancer genomic studies. Reference files are currently only available for the GRCh37/hg19 version of the human genome.
+Analyses of selection using the dNdScv and dNdSloc models. Default parameters typically increase the performance of the method on cancer genomic studies. Default arguments use the GRCh37/hg19 version of the human genome. To run dNdScv on other assemblies or species see the buildref function and the dndscv_data GitHub repository.
 }
 \details{
 Martincorena I, et al. (2017) Universal patterns of selection in cancer and somatic tissues. Cell. 171(5):1029-1041.

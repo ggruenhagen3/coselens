@@ -20,13 +20,14 @@ coselens(
   maxcovs = 20,
   constrain_wnon_wspl = T,
   outp = 3,
-  numcode = 1
+  numcode = 1,
+  mingenecovs = 500
 )
 }
 \arguments{
-\item{group1}{group of individuals (for example those that contain a mutation in a split_gene)}
+\item{group1}{group of samples (for example those that are subject to a given condition)}
 
-\item{group2}{another group of individuals that do NOT contain a mutation in a split_gene}
+\item{group2}{another group of samples that are NOT subject to that condition (the control group)}
 
 \item{subset.genes.by}{genes to subset results by}
 
@@ -35,147 +36,61 @@ coselens(
 \item{...}{other parameters passed to dncdscv, all defaults from dndscv are used except max_muts_per_gene_per_sample is set to Infinity}
 }
 \value{
-coselens returns a list containing four dataframes: 1) "summary" a summary of coselens output that should be sufficient for most users, 2) "full" which includes more detailed output, 3) fitted substitution models for group 1 from dndscv, and 4) fitted substitution models for group 2 from dndscv. The "summary" dataframe contains the following:
+coselens returns a list containing six objects: 1) "substitutions", a summary table of gene-level conditional selection for single-nucleotide substitutions (including missense, nonsense, and essential splice site mutations); 2) "indels", same for small indels; (3) "missense_sub", same for missense substitutions only; (4) "truncating_sub", same for truncating substitutions only (nonsense and essential splice site mutations); (5) "overall_mut", a summary table with the combined analysis of single-nucleotide substitutions and indels; and (6) "dndscv", a list of objects with the complete output of (non-conditional) selection analyses separately run on each group of samples, as provided by the dndscv package. The first table should be sufficient for most users. If interested in indels, please note that the indel analysis uses a different null model that makes the test for conditional selection notably less sensitive than in the case of substitutions. Such lower sensitivity also extends to the "overall_mut" table. The dataframes (1-5) contain the following:
 
 \itemize{
-\item gene_name: name of gene that conditional selection was calculated in
+\item gene_name: name of the gene that was tested for conditional selection
 }
 
 \itemize{
-\item num.driver.sub.group1: estimate of the number of drivers in group 1 based excess of non-synonymous mutations
+\item num.driver.group1: estimate of the number of drivers per sample per gene in group 1
 }
 
 \itemize{
-\item num.driver.sub.group2: estimate of the number of drivers in group 2 based excess of non-synonymous mutations
+\item num.driver.group2: estimate of the number of drivers per sample per gene in group 2
 }
 
 \itemize{
-\item num.driver.ind.group1: estimate of the number of drivers in group 1 based excess of indels
+\item Delta.Nd: absolute difference in the average number of driver mutations per sample (group 1 minus group 2)
 }
 
 \itemize{
-\item num.driver.ind.group2: estimate of the number of drivers in group 2 based excess of indels
+\item classification: classification of conditional selection. The most frequent classes are strict dependence (drivers only in group 1), facilitation (drivers more frequent in group 1), independence, inhibition (drivers less frequent in group 1), and strict inhibition (drivers absent from group 1). If negative selection is present, other possibilities are strict dependence with sign change (drivers positively selected in group 1 but negatively selected in group 2), strict inhibition with sign change (drivers positively selected in group 2 but negatively selected in group 1), aggravation (purifying selection against mutations becomes stronger in group 1), and relaxation (purifying selection against mutations becomes weaker in group 1).
 }
 
 \itemize{
-\item psub: p-value for conditional selection in non-synonymous substitutions
+\item dependency: dependency index, measuring the association between the grouping variable (group 1 or 2) and the average number of drivers observed in a gene. It serves as a quantitative measure of the qualitative effect described in "classification". In the most common cases, a value of 1 indicates strict dependence or inhibition (drivers only observed in one group) and a value of 0 (or NA) indicates independence.
 }
 
 \itemize{
-\item pind: p-value for conditional selection in indels
+\item pval: p-value for conditional selection
 }
 
 \itemize{
-\item pglobal: Fisher's combined p-value for psub and pind
+\item qval: q-value for conditional selection using Benjamini-Hochberg correction of false discovery rate.
+}
+
+The "dndscv" list contains two objects. Please, read the documentation of the dndscvpackage for further information about th
+
+\itemize{
+\item dndscv_group1: output of dndscv for group 1
 }
 
 \itemize{
-\item qsub: q-value of psub using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qind: q-value of pind using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qglobal: q-value of pglobal using Benjamini-Hochberg correction
-}
-
-The "full" dataframe contains all the informtion from the "summary" dataframe, with the following additional columns:
-
-\itemize{
-\item num.driver.mis.group1: estimate of the number of drivers in group 1 based excess of missense mutations
-}
-
-\itemize{
-\item num.driver.mis.group2: estimate of the number of drivers in group 2 based excess of missense mutations
-}
-
-\itemize{
-\item num.driver.trunc.group1: estimate of the number of drivers in group 1 based excess of truncating mutations
-}
-
-\itemize{
-\item num.driver.trunc.group2: estimate of the number of drivers in group 2 based excess of truncating mutations
-}
-
-\itemize{
-\item pmis: p-value for conditional selection in missense mutations
-}
-
-\itemize{
-\item ptrunc: p-value for conditional selection in truncating mutations
-}
-
-\itemize{
-\item psub.group1: p-value for selection in group 1 for non-synonymous substitutions
-}
-
-\itemize{
-\item psub.group2: p-value for selection in group 2 for non-synonymous substitutions
-}
-
-\itemize{
-\item pmis.group1: p-value for selection in group 1 for missense substitutions
-}
-
-\itemize{
-\item pmis.group2: p-value for selection in group 2 for missense substitutions
-}
-
-\itemize{
-\item ptrunc.group1: p-value for selection in group 1 for truncating substitutions
-}
-
-\itemize{
-\item ptrunc.group2: p-value for selection in group 2 for truncating substitutions
-}
-
-\itemize{
-\item pind.group1: p-value for selection in group 1 for indels
-}
-
-\itemize{
-\item pind.group2: p-value for selection in group 2 for indels
-}
-
-\itemize{
-\item qsub.group1: q-value of psub.group1 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qsub.group2: q-value of psub.group2 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qmis.group1: q-value of pmis.group1 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qmis.group2: q-value of pmis.group2 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qtrunc.group1: q-value of ptrunc.group1 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qtrunc.group2: q-value of ptrunc.group2 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qind.group1: q-value of pind.group1 using Benjamini-Hochberg correction
-}
-
-\itemize{
-\item qind.group2: q-value of pind.group2 using Benjamini-Hochberg correction
+\item dndscv_group2: output of dndscv for group 2
 }
 }
 \description{
-coselens identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes.
+Coselens identifies genes that are differentially selected depending on the grouping variable and provides maximum likelihood estimates of the effect sizes.
 Given an input of mutations from two groups of patients, dN/dS is calculated in each of the groups,
 and the excess of non-synonymous substitutions between them is found as an estimate for the difference
 in the number of driver mutations. For example, one group can be mutations from individuals in a certain
 cancer type with mutations in a specific gene vs those without mutations in the specific gene.
 A p value is returned for differential selection in each gene in the reference genome (default: hg19).
+}
+\details{
+Iranzo J, Gruenhagen G, Calle-Espinosa J, Koonin EV (2022) Pervasive conditional selection of driver mutations and modular epistasis networks in cancer. Cell Reports. 40(8):111272.
+}
+\author{
+George Gruehnagen (Georgia Institute of Technology) and Jaime Iranzo (Centro de Biotecnologia y Genomica de Plantas - Universidad Politcnica de Madrid)
 }

@@ -9,7 +9,7 @@ get_effect_size(coselens_full, mutation.class = "sub")
 \arguments{
 \item{coselens_full:}{full results table produced by coselens (coselens_out$full)}
 
-\item{mutation.class:}{class of mutations for which effect sizes will be calculated. Options: "sub" (all coding substitutions, default), "ind" (indels), "mis" (missense substitutions), "trunc" (truncating substitutions)}
+\item{mutation.class:}{class of mutations for which effect sizes will be calculated. Options: "sub" (all coding substitutions, default), "ind" (indels), "mis" (missense substitutions), "trunc" (truncating substitutions, including nonsense and essential splice site substitutions), "global" (combination of coding substitutions and indels, using Fisher's combined test for p-values)}
 }
 \value{
 dataframe with rows representing genes and the following columns
@@ -19,15 +19,23 @@ dataframe with rows representing genes and the following columns
 }
 
 \itemize{
+\item num.driver.group1: estimate of the number of drivers per sample per gene in group 1
+}
+
+\itemize{
+\item num.driver.group2: estimate of the number of drivers per sample per gene in group 2
+}
+
+\itemize{
 \item Delta.Nd: absolute difference in the average number of driver mutations per sample (group 1 minus group 2)
 }
 
 \itemize{
-\item dependency: dependency index, measuring the association between the grouping variable (group 1 or 2) and the average number of drivers observed in a gene. A value of 1 indicates strict dependence (driver mutations only observed in group 1); a value of 0 indicates independence; a value of -1 indicates strict inhibition (drivers observed in group 2 but never in group 1).
+\item classification: classification of conditional selection. The most frequent classes are strict dependence (drivers only in group 1), facilitation (drivers more frequent in group 1), independence, inhibition (drivers less frequent in group 1), and strict inhibition (drivers absent from group 1). If negative selection is present, other possibilities are strict dependence with sign change (drivers positively selected in group 1 but negatively selected in group 2), strict inhibition with sign change (drivers positively selected in group 2 but negatively selected in group 1), aggravation (purifying selection against mutations becomes stronger in group 1), and relaxation (purifying selection against mutations becomes weaker in group 1).
 }
 
 \itemize{
-\item class: classification of conditional selection. The most frequent classes are strict dependence (drivers only in group 1), facilitation (drivers more frequent in group 1), independence, partial inhibition (drivers less frequent in group 1), and strict inhibition (drivers absent from group 1). If negative selection is present, other possibilities are strict dependence with sign change (drivers positively selected in group 1 but negatively selected in group 2), strict inhibition with sign change (drivers positively selected in group 2 but negatively selected in group 1), aggravation (purifying selection against mutations becomes stronger in group 1), and relaxation (purifying selection against mutations becomes weaker in group 1).
+\item dependency: dependency index, measuring the association between the grouping variable (group 1 or 2) and the average number of drivers observed in a gene. It serves as a quantitative measure of the qualitative effect described in "classification". In the most common cases, a value of 1 indicates strict dependence or inhibition (drivers only observed in one group) and a value of 0 (or NA) indicates independence.
 }
 
 \itemize{
@@ -35,7 +43,7 @@ dataframe with rows representing genes and the following columns
 }
 
 \itemize{
-\item qval: q-value for conditional selection
+\item qval: q-value for conditional selection using Benjamini-Hochberg correction of false discovery rate.
 }
 }
 \description{
