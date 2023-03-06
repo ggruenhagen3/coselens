@@ -6,9 +6,9 @@ Coselens expands the dndscv method in two substantial ways. First, it quantifies
 A full length tutorial on how to use coselens can be found here.
 
 # Citation
-Please cite the following paper if using Coselens: https://www.sciencedirect.com/science/article/pii/S2666166723000758
+This work has been published https://doi.org/10.1016/j.celrep.2022.111272 and https://doi.org/10.1016/j.xpro.2023.102117. Please cite the former.
 
-Iranzo, Jaime, et al. “Protocol for Comparing Gene-Level Selection on Coding Mutations between Two Groups of Samples with Coselens.” *STAR Protocols*, vol. 4, no. 1, 2023, p. 102117., https://doi.org/10.1016/j.xpro.2023.102117. 
+Iranzo, Jaime, et al. “Pervasive Conditional Selection of Driver Mutations and Modular Epistasis Networks in Cancer.” *Cell Reports*, vol. 40, no. 8, 2022, p. 111272., https://doi.org/10.1016/j.celrep.2022.111272. 
 
 # Installation
 Coselens makes heavy use of ```dndscv```, but a slightly customized version of this package is used under-the-hood and does **not** require installation. However, coselens does require the following dependencies: ```BiocManager```, ```devtools```, ```geometry```, ```seqinr```, ```MASS```, ```GenomicRanges```, ```Biostrings```, and ```IRanges```. These can be installed by either ```install.packages()``` or ```BiocManager::install()```. To install coselens use:
