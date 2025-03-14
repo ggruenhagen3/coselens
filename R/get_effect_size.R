@@ -105,7 +105,7 @@ get_effect_size = function(coselens_full, mutation.class = "sub") {
   dep_idx[which(f_strict_inhibition_alt)] = - dep_idx[which(f_strict_inhibition_alt)]   # Change sign of strict inhibition (cases without dndscv significance)
   dep_idx[which(f_strict_inhibition & dep_idx > 1)] = 1                             # Correct cases of strict inhibition > 1
   dep_idx[which(f_strict_inhibition_alt & dep_idx > 1)] = 1                         # Correct cases of strict inhibition > 1
-  dep_idx[which(f_strict_dep_signch)] = (3 - dep_idx[which(f_strict_inh_signch)])/2 # Rescale and reverse strict dependence with sign change
+  dep_idx[which(f_strict_dep_signch)] = (3 - dep_idx[which(f_strict_dep_signch)])/2 # Rescale and reverse strict dependence with sign change
   dep_idx[which(f_strict_inh_signch)] = (dep_idx[which(f_strict_inh_signch)] + 3)/2 # Rescale and reverse strict inhibition with sign change
   dep_idx[which(f_aggravation)] = dep_idx[which(f_aggravation)] + 4                 # Rescale aggravation
   dep_idx[which(f_relaxation)] = - dep_idx[which(f_relaxation)] - 4                 # Rescale relaxation
